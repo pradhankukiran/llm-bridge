@@ -1,0 +1,6 @@
+{
+  "name": "LLM Bridge",
+  "description": "Configure custom LLM endpoints, API keys, and models to chat with them. Designed with a gorgeous Bento Grid interface.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
