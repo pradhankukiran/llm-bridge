@@ -17,15 +17,10 @@ sealed class LlmResponse {
     data class Error(val message: String, val code: Int, val rawResponse: String, val durationMs: Long) : LlmResponse()
 }
 
-class LlmClient {
-
-    private val baseHttpClient = OkHttpClient.Builder()
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
-        .build()
-
-    private val openAiCompatibleAdapter = OpenAiCompatibleAdapter(baseHttpClient)
-    private val anthropicAdapter = AnthropicMessagesAdapter(baseHttpClient)
+class LlmClient(
+    private val openAiCompatibleAdapter: LlmAdapter,
+    private val anthropicAdapter: LlmAdapter
+) {
 
     suspend fun executeChatCall(
         context: android.content.Context,
