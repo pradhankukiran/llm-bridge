@@ -15,7 +15,7 @@ class MainActivity : ComponentActivity() {
     enableEdgeToEdge()
     setContent {
       MyApplicationTheme {
-        val viewModel: LlmViewModel = viewModel()
+        val viewModel: LlmViewModel = viewModel(factory = LlmViewModel.Factory)
         LlmBridgeApp(viewModel = viewModel)
       }
     }
