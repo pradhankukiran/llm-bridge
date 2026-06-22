@@ -1,24 +1,16 @@
-# 🌉 LLM Bridge
+# LLM Bridge
 
-[![Android](https://img.shields.io/badge/Platform-Android%2014%2B%20%28API%2024%2B%29-3DDC84?logo=android&logoColor=white&style=flat-square)](#)
-[![Kotlin](https://img.shields.io/badge/Language-Kotlin%202.2.10-7F52FF?logo=kotlin&logoColor=white&style=flat-square)](#)
-[![Jetpack Compose](https://img.shields.io/badge/UI-Jetpack%20Compose-4285F4?logo=jetpackcompose&logoColor=white&style=flat-square)](#)
-[![Room](https://img.shields.io/badge/Database-Room%20SQLite-44B78B?logo=sqlite&logoColor=white&style=flat-square)](#)
+[![Android](https://img.shields.io/badge/Platform-Android%2014%2B%20%28API%2024%2B%29-3DDC84?style=flat-square)](#)
+[![Kotlin](https://img.shields.io/badge/Language-Kotlin%202.2.10-7F52FF?style=flat-square)](#)
+[![Jetpack Compose](https://img.shields.io/badge/UI-Jetpack%20Compose-4285F4?style=flat-square)](#)
+[![Room](https://img.shields.io/badge/Database-Room%20SQLite-44B78B?style=flat-square)](#)
 [![OkHttp](https://img.shields.io/badge/Networking-OkHttp%20%26%20Retrofit-005C9E?style=flat-square)](#)
 
 LLM Bridge is a professional Android application designed for configuring custom LLM provider routes, securely encrypting and storing API keys locally, and interacting with active model endpoints through a responsive, feature-rich chat interface.
 
 ---
 
-## 🎨 Screenshot Preview
-
-Below is a visual preview of the LLM Bridge application interface:
-
-![LLM Bridge Interface Preview](file:///home/kiran/llm-bridge/assets/screen.png)
-
----
-
-## ✨ Features
+## Features
 
 * **Flexible Endpoint Routing**
   Configure connections to any OpenAI-compatible API or native Anthropic endpoint. Easily integrate with:
@@ -36,7 +28,7 @@ Below is a visual preview of the LLM Bridge application interface:
 
 ---
 
-## 🏗️ Architecture & Component Mapping
+## Architecture and Component Mapping
 
 The application follows a clean separation of concerns, isolating network and translation layers from database schemas and the UI layer:
 
@@ -77,7 +69,7 @@ graph TD
 
 ---
 
-## 🛠️ Technology Stack & Dependencies
+## Technology Stack and Dependencies
 
 * **Language**: Kotlin 2.2.10 (with Kotlin Coroutines for concurrency)
 * **Toolkit**: Jetpack Compose (Material Design 3 Components)
@@ -89,7 +81,7 @@ graph TD
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
