@@ -37,9 +37,9 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
     val recentLogs by viewModel.recentLogs.collectAsStateWithLifecycle()
     val sessions by viewModel.sessions.collectAsStateWithLifecycle()
     val activeSession by viewModel.activeSession.collectAsStateWithLifecycle()
-    val currentTab by viewModel.currentTab.collectAsStateWithLifecycle()
 
     var showSettingsSheet by remember { mutableStateOf(false) }
+    var showLogsSheet by remember { mutableStateOf(false) }
     var renamingSession by remember { mutableStateOf<ChatSession?>(null) }
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -170,18 +170,11 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
             modifier = Modifier.fillMaxSize(),
             topBar = {
                 HeaderBlock(
-                    currentTab = currentTab,
                     activeConfig = activeConfig,
                     onMenuClick = { scope.launch { drawerState.open() } },
                     onSettingsClick = { showSettingsSheet = true },
-                    onClearChat = { viewModel.clearChatHistory() },
-                    onClearLogs = { viewModel.clearAllLogs() }
-                )
-            },
-            bottomBar = {
-                FloatingNavigationBar(
-                    currentTab = currentTab,
-                    onChangeTab = { viewModel.changeTab(it) }
+                    onLogsClick = { showLogsSheet = true },
+                    onClearChat = { viewModel.clearChatHistory() }
                 )
             },
             contentWindowInsets = WindowInsets(0, 0, 0, 0)
@@ -192,28 +185,12 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
                     .padding(innerPadding)
                     .consumeWindowInsets(innerPadding)
             ) {
-                when (currentTab) {
-                    0 -> DashboardPane(
-                        activeConfig = activeConfig,
-                        configurations = configurations,
-                        recentLogs = recentLogs,
-                        sessionsCount = sessions.size,
-                        totalMessagesCount = chatHistory.size,
-                        onSelectConfig = { viewModel.selectActiveConfiguration(it) },
-                        onNavigateToChat = { viewModel.changeTab(1) },
-                        onAddNewRoute = { showSettingsSheet = true }
-                    )
-                    1 -> ChatInterface(
-                        activeConfig = activeConfig,
-                        chatHistory = chatHistory,
-                        isGenerating = isGenerating,
-                        onSendMessage = { text, mediaUris, mediaType -> viewModel.sendChatMessage(text, mediaUris, mediaType) }
-                    )
-                    2 -> DiagnosticsLogsPane(
-                        recentLogs = recentLogs,
-                        onClearLogs = { viewModel.clearAllLogs() }
-                    )
-                }
+                ChatInterface(
+                    activeConfig = activeConfig,
+                    chatHistory = chatHistory,
+                    isGenerating = isGenerating,
+                    onSendMessage = { text, mediaUris, mediaType -> viewModel.sendChatMessage(text, mediaUris, mediaType) }
+                )
             }
         }
     }
@@ -276,36 +253,37 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
             )
         }
     }
+
+    if (showLogsSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showLogsSheet = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+        ) {
+            DiagnosticsLogsPane(
+                recentLogs = recentLogs,
+                onClearLogs = { viewModel.clearAllLogs() }
+            )
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HeaderBlock(
-    currentTab: Int,
     activeConfig: LlmConfiguration?,
     onMenuClick: () -> Unit,
     onSettingsClick: () -> Unit,
-    onClearChat: () -> Unit,
-    onClearLogs: () -> Unit
+    onLogsClick: () -> Unit,
+    onClearChat: () -> Unit
 ) {
     TopAppBar(
         navigationIcon = {
-            if (currentTab == 1) {
-                IconButton(onClick = onMenuClick) {
-                    Icon(
-                        imageVector = Icons.Default.Menu,
-                        contentDescription = "Open Conversations",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            } else {
-                IconButton(onClick = {}, enabled = false) {
-                    Icon(
-                        imageVector = Icons.Default.CompassCalibration,
-                        contentDescription = "App Logo",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
+            IconButton(onClick = onMenuClick) {
+                Icon(
+                    imageVector = Icons.Default.Menu,
+                    contentDescription = "Open Conversations",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         },
         title = {
@@ -315,11 +293,7 @@ fun HeaderBlock(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = when (currentTab) {
-                        0 -> "LLM Bridge"
-                        1 -> "Chat Gateway"
-                        else -> "Diagnostics & Logs"
-                    },
+                    text = "LLM Bridge",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -327,7 +301,7 @@ fun HeaderBlock(
                     overflow = TextOverflow.Ellipsis
                 )
                 
-                if (currentTab == 1 && activeConfig != null) {
+                if (activeConfig != null) {
                     val modelName = activeConfig.modelName.substringAfter("/")
                     AssistChip(
                         onClick = {},
@@ -346,124 +320,30 @@ fun HeaderBlock(
             }
         },
         actions = {
-            when (currentTab) {
-                0 -> {
-                    IconButton(onClick = onSettingsClick) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Provider Configuration",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                1 -> {
-                    IconButton(onClick = onClearChat) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = "Clear Chat History",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    IconButton(onClick = onSettingsClick) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Provider Configuration",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                2 -> {
-                    IconButton(onClick = onClearLogs) {
-                        Icon(
-                            imageVector = Icons.Default.DeleteSweep,
-                            contentDescription = "Clear Logs",
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                    }
-                }
+            IconButton(onClick = onClearChat) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Clear Chat History",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            IconButton(onClick = onLogsClick) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = "Diagnostics Logs",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            IconButton(onClick = onSettingsClick) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Provider Configuration",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainer
         )
     )
-}
-
-@Composable
-fun FloatingNavigationBar(
-    currentTab: Int,
-    onChangeTab: (Int) -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .navigationBarsPadding()
-            .padding(horizontal = 24.dp, vertical = 12.dp)
-            .clip(RoundedCornerShape(24.dp))
-            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
-            .border(
-                1.dp,
-                MaterialTheme.colorScheme.outline.copy(alpha = 0.15f),
-                RoundedCornerShape(24.dp)
-            )
-            .padding(vertical = 8.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            NavBarItem(
-                selected = currentTab == 0,
-                icon = Icons.Default.Dashboard,
-                label = "Dashboard",
-                onClick = { onChangeTab(0) }
-            )
-            NavBarItem(
-                selected = currentTab == 1,
-                icon = Icons.Default.ChatBubble,
-                label = "Chat",
-                onClick = { onChangeTab(1) }
-            )
-            NavBarItem(
-                selected = currentTab == 2,
-                icon = Icons.Default.Assessment,
-                label = "Telemetry",
-                onClick = { onChangeTab(2) }
-            )
-        }
-    }
-}
-
-@Composable
-fun RowScope.NavBarItem(
-    selected: Boolean,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    onClick: () -> Unit
-) {
-    val tintColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-    
-    Column(
-        modifier = Modifier
-            .weight(1f)
-            .clickable(onClick = onClick)
-            .padding(vertical = 4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = tintColor,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(modifier = Modifier.height(2.dp))
-        Text(
-            text = label,
-            fontSize = 10.sp,
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-            color = tintColor
-        )
-    }
 }
