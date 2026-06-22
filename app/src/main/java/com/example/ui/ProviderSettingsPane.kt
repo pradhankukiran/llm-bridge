@@ -73,10 +73,15 @@ fun ProviderSettingsPane(
                             .fillMaxWidth()
                             .clickable { onSelectActiveConfig(config.id) },
                         colors = CardDefaults.cardColors(
-                            containerColor = if (isActive) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f) 
-                                             else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                            containerColor = if (isActive) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f) 
+                                             else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
                         ),
-                        border = if (isActive) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null
+                        border = if (isActive) {
+                            BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)
+                        } else {
+                            BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+                        },
+                        shape = RoundedCornerShape(12.dp)
                     ) {
                         Row(
                             modifier = Modifier
@@ -157,11 +162,14 @@ fun ProviderSettingsPane(
             Button(
                 onClick = { isAddingNew = true },
                 modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.medium
+                shape = RoundedCornerShape(12.dp)
             ) {
                 Icon(imageVector = Icons.Default.Add, contentDescription = "Add New Route")
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("ADD NEW ROUTE")
+                Text(
+                    text = "ADD NEW ROUTE",
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     } else {
@@ -221,125 +229,161 @@ fun ProviderSettingsPane(
                 )
             }
 
-            M3InputField(
-                value = baseUrl,
-                onValueChange = { baseUrl = it },
-                label = "API Base URL",
-                placeholder = "https://api.openai.com/v1"
-            )
-
-            OutlinedTextField(
-                value = apiKey,
-                onValueChange = { apiKey = it },
-                label = { Text("API Key", style = MaterialTheme.typography.bodySmall) },
-                placeholder = { Text("Enter API key...", style = MaterialTheme.typography.bodyMedium) },
-                singleLine = true,
-                visualTransformation = if (isKeyVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                trailingIcon = {
-                    IconButton(onClick = { isKeyVisible = !isKeyVisible }) {
-                        Icon(
-                            imageVector = if (isKeyVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                            contentDescription = "Toggle visibility",
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                },
-                shape = MaterialTheme.shapes.small,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = modelName,
-                onValueChange = { modelName = it },
-                label = { Text("Model Name", style = MaterialTheme.typography.bodySmall) },
-                placeholder = { Text("e.g. gpt-4o, claude-3-5-sonnet, llama3", style = MaterialTheme.typography.bodyMedium) },
-                singleLine = true,
-                shape = MaterialTheme.shapes.small,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Row(
+            Card(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                ),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)),
+                shape = RoundedCornerShape(16.dp)
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Stream Response",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Text(
-                        text = "Receive message chunks incrementally in real-time.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                Switch(
-                    checked = stream,
-                    onCheckedChange = { stream = it }
-                )
-            }
-
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            Text(
-                text = "MODEL CONFIGURATION",
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            OutlinedTextField(
-                value = systemPrompt,
-                onValueChange = { systemPrompt = it },
-                label = { Text("System Prompt", style = MaterialTheme.typography.bodySmall) },
-                placeholder = { Text("Specify model persona or instructions...", style = MaterialTheme.typography.bodyMedium) },
-                singleLine = false,
-                minLines = 3,
-                maxLines = 6,
-                shape = MaterialTheme.shapes.small,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Text(
-                        text = "Temperature",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Text(
-                        text = String.format(java.util.Locale.US, "%.2f", temperature),
-                        style = MaterialTheme.typography.bodyMedium,
+                        text = "CONNECTION SETTINGS",
+                        style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.primary,
+                        letterSpacing = 1.sp
                     )
+
+                    LlmInputField(
+                        value = baseUrl,
+                        onValueChange = { baseUrl = it },
+                        label = "API Base URL",
+                        placeholder = "https://api.openai.com/v1"
+                    )
+
+                    LlmInputField(
+                        value = apiKey,
+                        onValueChange = { apiKey = it },
+                        label = "API Key",
+                        placeholder = "Enter API key...",
+                        visualTransformation = if (isKeyVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        trailingIcon = {
+                            IconButton(onClick = { isKeyVisible = !isKeyVisible }) {
+                                Icon(
+                                    imageVector = if (isKeyVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                    contentDescription = "Toggle visibility",
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+                    )
+
+                    LlmInputField(
+                        value = modelName,
+                        onValueChange = { modelName = it },
+                        label = "Model Name",
+                        placeholder = "e.g. gpt-4o, claude-3-5-sonnet, llama3"
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Stream Response",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "Receive message chunks incrementally in real-time.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                            )
+                        }
+                        Switch(
+                            checked = stream,
+                            onCheckedChange = { stream = it },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = MaterialTheme.colorScheme.primary,
+                                checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
+                            )
+                        )
+                    }
                 }
-                Slider(
-                    value = temperature,
-                    onValueChange = { temperature = it },
-                    valueRange = 0.0f..2.0f,
-                    modifier = Modifier.fillMaxWidth()
-                )
             }
 
-            OutlinedTextField(
-                value = maxTokens,
-                onValueChange = { maxTokens = it },
-                label = { Text("Max Tokens", style = MaterialTheme.typography.bodySmall) },
-                placeholder = { Text("e.g. 4096", style = MaterialTheme.typography.bodyMedium) },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
-                    imeAction = ImeAction.Done
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                 ),
-                shape = MaterialTheme.shapes.small,
-                modifier = Modifier.fillMaxWidth()
-            )
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "MODEL CONFIGURATION",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.secondary,
+                        letterSpacing = 1.sp
+                    )
+
+                    LlmInputField(
+                        value = systemPrompt,
+                        onValueChange = { systemPrompt = it },
+                        label = "System Prompt",
+                        placeholder = "Specify model persona or instructions...",
+                        singleLine = false,
+                        minLines = 3,
+                        maxLines = 6
+                    )
+
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Temperature",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = String.format(java.util.Locale.US, "%.2f", temperature),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.secondary
+                            )
+                        }
+                        Slider(
+                            value = temperature,
+                            onValueChange = { temperature = it },
+                            valueRange = 0.0f..2.0f,
+                            colors = SliderDefaults.colors(
+                                thumbColor = MaterialTheme.colorScheme.secondary,
+                                activeTrackColor = MaterialTheme.colorScheme.secondary,
+                                inactiveTrackColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+
+                    LlmInputField(
+                        value = maxTokens,
+                        onValueChange = { maxTokens = it },
+                        label = "Max Tokens",
+                        placeholder = "e.g. 4096",
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
+                            imeAction = ImeAction.Done
+                        )
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -357,9 +401,12 @@ fun ProviderSettingsPane(
                         }
                     },
                     modifier = Modifier.weight(1f),
-                    shape = MaterialTheme.shapes.medium
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("CANCEL")
+                    Text(
+                        text = "CANCEL",
+                        fontWeight = FontWeight.Bold
+                    )
                 }
 
                 Button(
@@ -389,9 +436,12 @@ fun ProviderSettingsPane(
                     },
                     enabled = baseUrl.isNotBlank() && modelName.isNotBlank(),
                     modifier = Modifier.weight(1f),
-                    shape = MaterialTheme.shapes.medium
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("SAVE ROUTE")
+                    Text(
+                        text = "SAVE ROUTE",
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         }
@@ -399,14 +449,18 @@ fun ProviderSettingsPane(
 }
 
 @Composable
-fun M3InputField(
+fun LlmInputField(
     value: String,
     onValueChange: (String) -> Unit,
     label: String,
     placeholder: String,
     modifier: Modifier = Modifier,
     singleLine: Boolean = true,
-    maxLines: Int = 1
+    maxLines: Int = 1,
+    minLines: Int = 1,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    trailingIcon: @Composable (() -> Unit)? = null,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default
 ) {
     OutlinedTextField(
         value = value,
@@ -414,18 +468,33 @@ fun M3InputField(
         label = { 
             Text(
                 text = label,
-                style = MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Medium
             ) 
         },
         placeholder = { 
             Text(
                 text = placeholder, 
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
             ) 
         },
         singleLine = singleLine,
         maxLines = maxLines,
-        shape = MaterialTheme.shapes.small,
+        minLines = minLines,
+        visualTransformation = visualTransformation,
+        trailingIcon = trailingIcon,
+        keyboardOptions = keyboardOptions,
+        shape = RoundedCornerShape(12.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f),
+            focusedLabelColor = MaterialTheme.colorScheme.primary,
+            unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+            focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.2f),
+            unfocusedContainerColor = Color.Transparent,
+            cursorColor = MaterialTheme.colorScheme.primary
+        ),
         modifier = modifier.fillMaxWidth()
     )
 }
