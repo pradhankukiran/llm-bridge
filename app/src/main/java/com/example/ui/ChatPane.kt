@@ -28,6 +28,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -96,82 +97,91 @@ fun ChatInterface(
         }
     }
 
-    Column(
-        modifier = Modifier.fillMaxSize()
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
     ) {
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
-            contentAlignment = Alignment.BottomCenter
-        ) {
-            if (chatHistory.isEmpty()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "Empty chat",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                        modifier = Modifier.size(48.dp)
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
+        if (chatHistory.isEmpty()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Empty chat",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                    modifier = Modifier.size(48.dp)
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = "No history under: ${activeConfig?.name ?: "Select an active route"}",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+                if (activeConfig == null) {
                     Text(
-                        text = "No history under: ${activeConfig?.name ?: "Select an active route"}",
-                        fontSize = 13.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
+                        text = "Please configure and activate a route first.",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(top = 6.dp)
                     )
-                    if (activeConfig == null) {
-                        Text(
-                            text = "Please configure and activate a route first.",
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
+                }
+            }
+        } else {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                reverseLayout = false,
+                contentPadding = PaddingValues(bottom = 120.dp, top = 16.dp, start = 16.dp, end = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                items(chatHistory) { msg ->
+                    if (msg.role != "assistant" || msg.content.isNotEmpty()) {
+                        ChatBubble(message = msg)
                     }
                 }
-            } else {
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier.fillMaxSize(),
-                    reverseLayout = false,
-                    contentPadding = PaddingValues(bottom = 16.dp, top = 16.dp, start = 16.dp, end = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    items(chatHistory) { msg ->
-                        if (msg.role != "assistant" || msg.content.isNotEmpty()) {
-                            ChatBubble(message = msg)
-                        }
-                    }
-                    if (showThinking) {
-                        item {
-                            TypingIndicatorBubble()
-                        }
+                if (showThinking) {
+                    item {
+                        TypingIndicatorBubble()
                     }
                 }
             }
         }
 
+        // Floating Footer Row Input Container with Scrim Gradient Backdrop
         Column(
             modifier = Modifier
+                .align(Alignment.BottomCenter)
                 .fillMaxWidth()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            MaterialTheme.colorScheme.background.copy(alpha = 0.8f),
+                            MaterialTheme.colorScheme.background
+                        ),
+                        startY = 0f
+                    )
+                )
                 .navigationBarsPadding()
                 .imePadding()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .padding(horizontal = 16.dp, vertical = 16.dp)
         ) {
+            // Media Attachment Preview
             if (mediaSupported && mediaUris.isNotEmpty()) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 8.dp)
-                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp))
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -208,12 +218,13 @@ fun ChatInterface(
                 }
             }
 
+            // Input field border glow
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(28.dp))
-                    .border(1.5.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(28.dp))
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                    .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(24.dp))
+                    .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), RoundedCornerShape(24.dp))
+                    .padding(horizontal = 10.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (mediaSupported) {
@@ -238,7 +249,12 @@ fun ChatInterface(
                 TextField(
                     value = inputText,
                     onValueChange = { inputText = it },
-                    placeholder = { Text("Chat with ${activeConfig?.modelName?.substringAfter("/") ?: "select Model..."}...") },
+                    placeholder = { 
+                        Text(
+                            text = "Chat with ${activeConfig?.modelName?.substringAfter("/") ?: "select Model..."}...",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        ) 
+                    },
                     modifier = Modifier
                         .weight(1f)
                         .testTag("chat_input"),
@@ -247,7 +263,9 @@ fun ChatInterface(
                         unfocusedContainerColor = Color.Transparent,
                         disabledContainerColor = Color.Transparent,
                         focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent
+                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                     ),
                     singleLine = false,
                     maxLines = 4,
@@ -268,7 +286,12 @@ fun ChatInterface(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(CircleShape)
-                        .background(if (activeConfig != null && inputText.isNotBlank() && !isGenerating) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
+                        .background(
+                            if (activeConfig != null && inputText.isNotBlank() && !isGenerating) 
+                                MaterialTheme.colorScheme.primary 
+                            else 
+                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.15f)
+                        )
                         .clickable(enabled = activeConfig != null && inputText.isNotBlank() && !isGenerating) {
                             onSendMessage(inputText, mediaUris, mediaType)
                             inputText = ""
@@ -280,7 +303,7 @@ fun ChatInterface(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Send,
                         contentDescription = "Send Message",
-                        tint = Color.White,
+                        tint = if (activeConfig != null && inputText.isNotBlank() && !isGenerating) Color.White else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -292,9 +315,13 @@ fun ChatInterface(
 @Composable
 fun ChatBubble(message: ChatMessage) {
     val isUser = message.role == "user"
-    val bubbleColor = if (isUser) MaterialTheme.colorScheme.primary else if (message.isError) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.secondaryContainer
-    val textColor = if (isUser) MaterialTheme.colorScheme.onPrimary else if (message.isError) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSecondaryContainer
-
+    val bubbleShape = RoundedCornerShape(
+        topStart = 18.dp,
+        topEnd = 18.dp,
+        bottomStart = if (isUser) 18.dp else 4.dp,
+        bottomEnd = if (isUser) 4.dp else 18.dp
+    )
+    
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
@@ -303,31 +330,54 @@ fun ChatBubble(message: ChatMessage) {
             modifier = Modifier
                 .fillMaxWidth(0.85f)
                 .wrapContentWidth(align = if (isUser) Alignment.End else Alignment.Start)
-                .clip(
-                    RoundedCornerShape(
-                        topStart = 16.dp,
-                        topEnd = 16.dp,
-                        bottomStart = if (isUser) 16.dp else 4.dp,
-                        bottomEnd = if (isUser) 4.dp else 16.dp
-                    )
+                .clip(bubbleShape)
+                .background(
+                    if (isUser) {
+                        Brush.linearGradient(
+                            listOf(
+                                MaterialTheme.colorScheme.primary,
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
+                            )
+                        )
+                    } else if (message.isError) {
+                        Brush.linearGradient(
+                            listOf(
+                                MaterialTheme.colorScheme.errorContainer,
+                                MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.9f)
+                            )
+                        )
+                    } else {
+                        Brush.linearGradient(
+                            listOf(
+                                MaterialTheme.colorScheme.surfaceVariant,
+                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f)
+                            )
+                        )
+                    }
                 )
-                .background(bubbleColor)
                 .border(
                     width = 1.dp,
-                    color = if (message.isError) MaterialTheme.colorScheme.error else Color.Transparent,
-                    shape = RoundedCornerShape(
-                        topStart = 16.dp,
-                        topEnd = 16.dp,
-                        bottomStart = if (isUser) 16.dp else 4.dp,
-                        bottomEnd = if (isUser) 4.dp else 16.dp
-                    )
+                    color = if (message.isError) {
+                        MaterialTheme.colorScheme.error
+                    } else if (!isUser) {
+                        MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
+                    } else {
+                        Color.Transparent
+                    },
+                    shape = bubbleShape
                 )
-                .padding(vertical = 10.dp, horizontal = 14.dp)
+                .padding(vertical = 12.dp, horizontal = 16.dp)
         ) {
             Column {
                 MarkdownText(
                     content = message.content,
-                    color = textColor
+                    color = if (isUser) {
+                        MaterialTheme.colorScheme.onPrimary
+                    } else if (message.isError) {
+                        MaterialTheme.colorScheme.onErrorContainer
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    }
                 )
             }
         }
@@ -389,9 +439,10 @@ fun TypingIndicatorBubble() {
     ) {
         Box(
             modifier = Modifier
-                .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 4.dp, bottomEnd = 16.dp))
-                .background(MaterialTheme.colorScheme.secondaryContainer)
-                .padding(vertical = 12.dp, horizontal = 16.dp),
+                .clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 4.dp, bottomEnd = 18.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f), RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 4.dp, bottomEnd = 18.dp))
+                .padding(vertical = 12.dp, horizontal = 18.dp),
             contentAlignment = Alignment.Center
         ) {
             Row(
@@ -432,7 +483,7 @@ fun TypingIndicatorBubble() {
                 Text(
                     text = "Thinking...",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
