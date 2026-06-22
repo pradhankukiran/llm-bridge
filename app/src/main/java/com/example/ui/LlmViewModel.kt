@@ -3,6 +3,10 @@ package com.example.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.CreationExtras
+import com.example.LlmBridgeApplication
 import com.example.api.LlmClient
 import com.example.api.LlmResponse
 import com.example.api.adapter.ModelOffering
@@ -28,10 +32,11 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class LlmViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val repository: LlmRepository
-    private val llmClient = LlmClient()
+class LlmViewModel(
+    application: Application,
+    private val repository: LlmRepository,
+    private val llmClient: LlmClient
+) : AndroidViewModel(application) {
 
     // Loaded configurations
     val configurations: StateFlow<List<LlmConfiguration>>
@@ -63,8 +68,6 @@ class LlmViewModel(application: Application) : AndroidViewModel(application) {
     val activeSessionId: StateFlow<Int?> = _activeSessionId.asStateFlow()
 
     init {
-        val database = AppDatabase.getDatabase(application)
-        repository = LlmRepository(database.llmDao())
 
         configurations = repository.allConfigurations
             .stateIn(
@@ -351,6 +354,23 @@ class LlmViewModel(application: Application) : AndroidViewModel(application) {
     fun clearAllLogs() {
         viewModelScope.launch {
             repository.clearLogs()
+        }
+    }
+
+    companion object {
+        val Factory: ViewModelProvider.Factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(
+                modelClass: Class<T>,
+                extras: androidx.lifecycle.viewmodel.CreationExtras
+            ): T {
+                val application = checkNotNull(extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY]) as LlmBridgeApplication
+                return LlmViewModel(
+                    application,
+                    application.container.repository,
+                    application.container.llmClient
+                ) as T
+            }
         }
     }
 }
