@@ -26,6 +26,8 @@ LLM Bridge is a local-first Android chat app for bringing your own LLM provider 
   Server-Sent Events support streams assistant responses chunk by chunk, while stopped generations keep the partial assistant response.
 * **Retry and Attachments**
   Retry the latest prompt using the current active route, and preserve user-message attachment metadata for multimodal OpenAI-compatible requests.
+* **Thinking Tag Controls**
+  Hide raw `<think>` blocks by default, or enable a route-level toggle to show them as collapsible reasoning panels.
 * **Markdown Rendering**
   Assistant messages render common Markdown structures, including headings, emphasis, lists, tables, and syntax-highlighted code blocks.
 
@@ -69,7 +71,7 @@ graph TD
   * **[LlmViewModel](app/src/main/java/com/example/ui/LlmViewModel.kt)**: Owns observable UI state, generation lifecycle, route/session selection, retries, snapshots, and diagnostics actions.
   * **[LlmBridgeApp](app/src/main/java/com/example/ui/LlmBridgeApp.kt)**: Main Compose shell with session list, chat pane, route context strip, overflow actions, diagnostics modal, and full-screen settings.
   * **[ChatPane](app/src/main/java/com/example/ui/ChatPane.kt)**: Message list, prompt input, attachment picker, send/stop controls, copy behavior, and retry affordance.
-  * **[ProviderSettingsPane](app/src/main/java/com/example/ui/ProviderSettingsPane.kt)**: Full-screen route editor for endpoint, model, API key, system prompt, temperature, max tokens, and streaming settings.
+  * **[ProviderSettingsPane](app/src/main/java/com/example/ui/ProviderSettingsPane.kt)**: Full-screen route editor for endpoint, model, API key, system prompt, temperature, max tokens, streaming, and thinking-tag display settings.
   * **Theme configuration**: Colors and typography live in **[Color.kt](app/src/main/java/com/example/ui/theme/Color.kt)**, **[Theme.kt](app/src/main/java/com/example/ui/theme/Theme.kt)**, and **[Type.kt](app/src/main/java/com/example/ui/theme/Type.kt)**.
 
 ---
@@ -113,7 +115,7 @@ Command-line checks:
 
 1. Open settings from the top bar.
 2. Add a route with the provider base URL, protocol type, API key, and exact model name.
-3. Set optional request parameters such as system prompt, temperature, max tokens, and streaming.
+3. Set optional request parameters such as system prompt, temperature, max tokens, streaming, and thinking-tag display.
 4. Save the route and start chatting from the main screen.
 
 Route names are generated from the host and model name so long provider model slugs remain visible in the dedicated route context strip below the top bar.
