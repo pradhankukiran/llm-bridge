@@ -161,7 +161,7 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
                                         },
                                         onLongClick = { runWhenIdle { renamingSession = session } }
                                     ),
-                                color = if (isActive) MaterialTheme.colorScheme.secondaryContainer 
+                                color = if (isActive) MaterialTheme.colorScheme.primaryContainer 
                                         else Color.Transparent
                             ) {
                                 Row(
@@ -179,7 +179,7 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
                                         Icon(
                                             imageVector = Icons.Default.ChatBubble,
                                             contentDescription = "Chat",
-                                            tint = if (isActive) MaterialTheme.colorScheme.onSecondaryContainer 
+                                            tint = if (isActive) MaterialTheme.colorScheme.onPrimaryContainer 
                                                    else MaterialTheme.colorScheme.onSurfaceVariant,
                                             modifier = Modifier.size(18.dp)
                                         )
@@ -187,7 +187,7 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
                                             text = session.title,
                                             style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
-                                            color = if (isActive) MaterialTheme.colorScheme.onSecondaryContainer 
+                                            color = if (isActive) MaterialTheme.colorScheme.onPrimaryContainer 
                                                    else MaterialTheme.colorScheme.onSurface,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis

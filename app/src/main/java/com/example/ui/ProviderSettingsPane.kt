@@ -108,7 +108,7 @@ fun ProviderSettingsPane(
                                     )
                                     Surface(
                                         color = if (config.apiType == "ANTHROPIC") MaterialTheme.colorScheme.tertiaryContainer 
-                                                else MaterialTheme.colorScheme.secondaryContainer,
+                                                else MaterialTheme.colorScheme.primaryContainer,
                                         shape = RoundedCornerShape(4.dp)
                                     ) {
                                         Text(
@@ -118,7 +118,7 @@ fun ProviderSettingsPane(
                                             fontWeight = FontWeight.Bold,
                                             modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
                                             color = if (config.apiType == "ANTHROPIC") MaterialTheme.colorScheme.onTertiaryContainer 
-                                                    else MaterialTheme.colorScheme.onSecondaryContainer
+                                                    else MaterialTheme.colorScheme.onPrimaryContainer
                                         )
                                     }
                                 }
@@ -431,7 +431,7 @@ fun ProviderSettingsPane(
                         text = "Model configuration",
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.secondary
+                        color = MaterialTheme.colorScheme.primary
                     )
 
                     LlmInputField(
@@ -460,7 +460,7 @@ fun ProviderSettingsPane(
                                 text = String.format(java.util.Locale.US, "%.2f", temperature),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.secondary
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
                         Slider(
@@ -468,8 +468,8 @@ fun ProviderSettingsPane(
                             onValueChange = { temperature = it },
                             valueRange = 0.0f..2.0f,
                             colors = SliderDefaults.colors(
-                                thumbColor = MaterialTheme.colorScheme.secondary,
-                                activeTrackColor = MaterialTheme.colorScheme.secondary,
+                                thumbColor = MaterialTheme.colorScheme.primary,
+                                activeTrackColor = MaterialTheme.colorScheme.primary,
                                 inactiveTrackColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
                             ),
                             modifier = Modifier.fillMaxWidth()

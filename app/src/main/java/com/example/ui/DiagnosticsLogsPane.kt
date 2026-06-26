@@ -257,7 +257,7 @@ fun DiagnosticLogCard(log: ApiLog) {
                             text = "Response snapshot",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = if (isSuccess) MaterialTheme.colorScheme.secondary else (if (dark) StatusRedDark else StatusRedLight)
+                            color = if (isSuccess) MaterialTheme.colorScheme.primary else (if (dark) StatusRedDark else StatusRedLight)
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Surface(
