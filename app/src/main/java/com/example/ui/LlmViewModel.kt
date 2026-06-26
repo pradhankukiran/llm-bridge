@@ -315,10 +315,16 @@ class LlmViewModel(
                     )
                 }
                 is LlmResponse.Error -> {
+                    val partial = assistantResponseContent.toString().trim()
+                    val errorBody = if (partial.isNotEmpty()) {
+                        "$partial\n\n_[stream interrupted: ${response.message}]_"
+                    } else {
+                        "Failure: ${response.message}"
+                    }
                     val errorMsg = ChatMessage(
                         sessionId = sessionToUse.id,
                         role = "assistant",
-                        content = "Failure: ${response.message}",
+                        content = errorBody,
                         isError = true
                     )
                     repository.insertMessage(errorMsg)

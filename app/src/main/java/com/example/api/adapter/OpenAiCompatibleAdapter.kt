@@ -65,17 +65,21 @@ class OpenAiCompatibleAdapter(
                 val source = response.body?.source() ?: return AdapterChatResult("Empty body", "", response.code)
                 val fullText = StringBuilder()
                 val rawBuffer = StringBuilder()
-                try {
-                    while (true) {
-                        val line = source.readUtf8Line() ?: break
-                        rawBuffer.append(line).append("\n")
-                        val chunk = JsonWire.parseOpenAiStreamLine(line)
-                        if (chunk != null) {
-                            fullText.append(chunk)
-                            onChunkReceived(chunk)
-                        }
+                while (true) {
+                    val line = source.readUtf8Line() ?: break
+                    rawBuffer.append(line).append("\n")
+                    val chunk = JsonWire.parseOpenAiStreamLine(line)
+                    if (chunk != null) {
+                        fullText.append(chunk)
+                        onChunkReceived(chunk)
                     }
-                } catch (_: Exception) {
+                }
+                if (fullText.isBlank()) {
+                    return AdapterChatResult(
+                        "Stream ended without content.\nRaw: $rawBuffer",
+                        rawBuffer.toString(),
+                        response.code
+                    )
                 }
                 return AdapterChatResult(fullText.toString(), rawBuffer.toString(), response.code)
             } else {
