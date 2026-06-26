@@ -51,6 +51,7 @@ fun ProviderSettingsPane(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight()
+                .navigationBarsPadding()
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -257,6 +258,7 @@ fun ProviderSettingsPane(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight()
+                .navigationBarsPadding()
                 .padding(20.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
