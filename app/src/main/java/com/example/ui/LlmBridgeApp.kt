@@ -55,6 +55,13 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    fun runWhenIdle(action: () -> Unit) {
+        if (isGenerating) {
+            scope.launch { snackbarHostState.showSnackbar("Stop generation first") }
+        } else {
+            action()
+        }
+    }
 
     if (showSettingsScreen) {
         ProviderSettingsPane(
@@ -108,8 +115,10 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
 
                     Button(
                         onClick = {
-                            viewModel.createNewSession()
-                            scope.launch { drawerState.close() }
+                            runWhenIdle {
+                                viewModel.createNewSession()
+                                scope.launch { drawerState.close() }
+                            }
                         },
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(
@@ -137,10 +146,12 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
                                     .clip(MaterialTheme.shapes.medium)
                                     .combinedClickable(
                                         onClick = {
-                                            viewModel.selectSession(session.id)
-                                            scope.launch { drawerState.close() }
+                                            runWhenIdle {
+                                                viewModel.selectSession(session.id)
+                                                scope.launch { drawerState.close() }
+                                            }
                                         },
-                                        onLongClick = { renamingSession = session }
+                                        onLongClick = { runWhenIdle { renamingSession = session } }
                                     ),
                                 color = if (isActive) MaterialTheme.colorScheme.secondaryContainer 
                                         else Color.Transparent
@@ -180,7 +191,7 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
                                         horizontalArrangement = Arrangement.spacedBy(2.dp)
                                     ) {
                                         IconButton(
-                                            onClick = { renamingSession = session }
+                                            onClick = { runWhenIdle { renamingSession = session } }
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Default.Edit,
@@ -190,7 +201,7 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
                                             )
                                         }
                                         IconButton(
-                                            onClick = { sessionPendingDelete = session }
+                                            onClick = { runWhenIdle { sessionPendingDelete = session } }
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Default.Delete,
@@ -214,10 +225,10 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
                 HeaderBlock(
                     activeConfig = activeConfig,
                     onMenuClick = { scope.launch { drawerState.open() } },
-                    onSettingsClick = { showSettingsScreen = true },
+                    onSettingsClick = { runWhenIdle { showSettingsScreen = true } },
                     onLogsClick = { showLogsSheet = true },
-                    onClearChat = { showClearChatConfirm = true },
-                    onRouteClick = { showSettingsScreen = true }
+                    onClearChat = { runWhenIdle { showClearChatConfirm = true } },
+                    onRouteClick = { runWhenIdle { showSettingsScreen = true } }
                 )
             },
             snackbarHost = { SnackbarHost(snackbarHostState) },
