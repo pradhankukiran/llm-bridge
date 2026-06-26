@@ -55,7 +55,7 @@ fun ChatInterface(
     chatHistory: List<ChatMessage>,
     isGenerating: Boolean,
     isWaitingForFirstChunk: Boolean,
-    onSendMessage: (String, String, String) -> Unit,
+    onSendMessage: (String, String, String, String) -> Unit,
     onStopGeneration: () -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -291,7 +291,7 @@ fun ChatInterface(
                     keyboardActions = KeyboardActions(
                         onSend = {
                             if (inputText.isNotBlank() && activeConfig != null) {
-                                onSendMessage(inputText, mediaUris, mediaType)
+                                onSendMessage(inputText, mediaUris, attachmentName.orEmpty(), mediaType)
                                 inputText = ""
                                 mediaUris = ""
                                 keyboardController?.hide()
@@ -318,7 +318,7 @@ fun ChatInterface(
                             if (isGenerating) {
                                 onStopGeneration()
                             } else {
-                                onSendMessage(inputText, mediaUris, mediaType)
+                                onSendMessage(inputText, mediaUris, attachmentName.orEmpty(), mediaType)
                                 inputText = ""
                                 mediaUris = ""
                                 keyboardController?.hide()
@@ -407,6 +407,27 @@ fun ChatBubble(message: ChatMessage) {
                         MaterialTheme.colorScheme.onSurface
                     }
                 )
+                if (isUser && message.mediaUri.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AttachFile,
+                            contentDescription = "Attached media",
+                            tint = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = message.mediaDisplayName.ifBlank { message.mediaUri.substringAfterLast("/") },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
             }
         }
     }

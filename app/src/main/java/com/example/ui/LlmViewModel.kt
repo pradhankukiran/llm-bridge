@@ -288,7 +288,12 @@ class LlmViewModel(
         }
     }
 
-    fun sendChatMessage(text: String, mediaUris: String = "", mediaInputType: String = "auto") {
+    fun sendChatMessage(
+        text: String,
+        mediaUris: String = "",
+        mediaDisplayName: String = "",
+        mediaInputType: String = "auto"
+    ) {
         if (text.isBlank() || _isGenerating.value) return
 
         val config = activeConfig.value ?: return
@@ -323,7 +328,14 @@ class LlmViewModel(
 
             try {
                 // 1. Save user message to DB
-                val userMsg = ChatMessage(sessionId = sessionToUse.id, role = "user", content = text)
+                val userMsg = ChatMessage(
+                    sessionId = sessionToUse.id,
+                    role = "user",
+                    content = text,
+                    mediaUri = mediaUris,
+                    mediaDisplayName = mediaDisplayName,
+                    mediaInputType = mediaInputType.ifBlank { "auto" }
+                )
                 repository.insertMessage(userMsg)
 
                 // 2. Fetch history from DB (guaranteed to include userMsg) to feed the model
