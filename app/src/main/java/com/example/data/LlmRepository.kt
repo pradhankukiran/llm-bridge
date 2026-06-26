@@ -4,7 +4,10 @@ import com.example.api.adapter.ProviderIds
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class LlmRepository(private val llmDao: LlmDao) {
+class LlmRepository(
+    private val llmDao: LlmDao,
+    private val apiKeyCipher: ApiKeyCipher
+) {
 
     val allConfigurations: Flow<List<LlmConfiguration>> =
         llmDao.getAllConfigurations().map { configs -> configs.map { decryptConfig(it) } }
@@ -74,11 +77,11 @@ class LlmRepository(private val llmDao: LlmDao) {
     }
 
     private fun encryptConfig(config: LlmConfiguration): LlmConfiguration {
-        return config.copy(apiKey = ApiKeyCipher.encrypt(config.apiKey))
+        return config.copy(apiKey = apiKeyCipher.encrypt(config.apiKey))
     }
 
     private fun decryptConfig(config: LlmConfiguration): LlmConfiguration {
-        return config.copy(apiKey = ApiKeyCipher.decrypt(config.apiKey))
+        return config.copy(apiKey = apiKeyCipher.decrypt(config.apiKey))
     }
 
 }

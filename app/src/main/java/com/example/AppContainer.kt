@@ -8,6 +8,8 @@ import com.example.api.adapter.LlmAdapter
 import com.example.api.adapter.MediaLoader
 import com.example.api.adapter.OpenAiCompatibleAdapter
 import com.example.data.AppDatabase
+import com.example.data.ApiKeyCipher
+import com.example.data.KeystoreApiKeyCipher
 import com.example.data.LlmRepository
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
@@ -41,8 +43,12 @@ class AppContainerImpl(private val context: Context) : AppContainer {
         AnthropicMessagesAdapter(baseHttpClient)
     }
 
+    private val apiKeyCipher: ApiKeyCipher by lazy {
+        KeystoreApiKeyCipher()
+    }
+
     override val repository: LlmRepository by lazy {
-        LlmRepository(database.llmDao())
+        LlmRepository(database.llmDao(), apiKeyCipher)
     }
 
     override val llmClient: LlmClient by lazy {
