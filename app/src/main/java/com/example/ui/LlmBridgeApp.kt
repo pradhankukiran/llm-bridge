@@ -377,6 +377,7 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
         ) {
             DiagnosticsLogsPane(
                 recentLogs = recentLogs,
+                sessionTitle = activeSession?.title,
                 onClearLogs = {
                     showLogsSheet = false
                     viewModel.clearAllLogs { deletedLogs ->

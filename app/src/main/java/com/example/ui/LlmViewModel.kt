@@ -71,13 +71,15 @@ class LlmViewModel(
 
     data class DeletedSessionSnapshot(
         val session: ChatSession,
-        val messages: List<ChatMessage>
+        val messages: List<ChatMessage>,
+        val logs: List<ApiLog>
     )
 
     data class DeletedConfigurationSnapshot(
         val configuration: LlmConfiguration,
         val sessions: List<ChatSession>,
-        val messages: List<ChatMessage>
+        val messages: List<ChatMessage>,
+        val logs: List<ApiLog>
     )
 
     private val _isWaitingForFirstChunk = MutableStateFlow(false)
@@ -100,13 +102,6 @@ class LlmViewModel(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5000),
                 initialValue = null
-            )
-
-        recentLogs = repository.recentLogs
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5000),
-                initialValue = emptyList()
             )
 
         sessions = activeConfig
@@ -134,6 +129,20 @@ class LlmViewModel(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = null
         )
+
+        recentLogs = activeSession
+            .flatMapLatest { session ->
+                if (session != null) {
+                    repository.getLogsForSession(session.id)
+                } else {
+                    flowOf(emptyList())
+                }
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = emptyList()
+            )
 
         // Seed default config if empty, without destroying existing configurations
         viewModelScope.launch {
@@ -219,9 +228,10 @@ class LlmViewModel(
             val config = repository.getConfigurationSnapshot(id)
             val sessions = repository.getSessionsForConfigOneShot(id)
             val messages = repository.getMessagesForConfigOneShot(id)
+            val logs = repository.getLogsForConfigOneShot(id)
             repository.deleteConfiguration(id)
             if (config != null) {
-                onDeleted?.invoke(DeletedConfigurationSnapshot(config, sessions, messages))
+                onDeleted?.invoke(DeletedConfigurationSnapshot(config, sessions, messages, logs))
             }
         }
     }
@@ -231,7 +241,8 @@ class LlmViewModel(
             repository.restoreConfigurationSnapshot(
                 snapshot.configuration,
                 snapshot.sessions,
-                snapshot.messages
+                snapshot.messages,
+                snapshot.logs
             )
         }
     }
@@ -258,9 +269,10 @@ class LlmViewModel(
         viewModelScope.launch {
             val session = repository.getSessionById(sessionId)
             val messages = repository.getMessagesForSessionOneShot(sessionId)
+            val logs = repository.getLogsForSessionOneShot(sessionId)
             repository.deleteSession(sessionId)
             if (session != null) {
-                onDeleted?.invoke(DeletedSessionSnapshot(session, messages))
+                onDeleted?.invoke(DeletedSessionSnapshot(session, messages, logs))
             }
             val config = activeConfig.value
             if (config != null) {
@@ -277,7 +289,7 @@ class LlmViewModel(
 
     fun restoreDeletedSession(snapshot: DeletedSessionSnapshot) {
         viewModelScope.launch {
-            repository.restoreSessionSnapshot(snapshot.session, snapshot.messages)
+            repository.restoreSessionSnapshot(snapshot.session, snapshot.messages, snapshot.logs)
             _activeSessionId.value = snapshot.session.id
         }
     }
@@ -378,6 +390,7 @@ class LlmViewModel(
                         // Store details in Room logs
                         repository.insertLog(
                             ApiLog(
+                                sessionId = sessionToUse.id,
                                 endpointName = config.name,
                                 requestUrl = config.baseUrl,
                                 payloadSnippet = "Model: ${config.modelName}. Prompt: \"$text\"",
@@ -405,6 +418,7 @@ class LlmViewModel(
                         // Store failure logs
                         repository.insertLog(
                             ApiLog(
+                                sessionId = sessionToUse.id,
                                 endpointName = config.name,
                                 requestUrl = config.baseUrl,
                                 payloadSnippet = "Model: ${config.modelName}. Prompt: \"$text\"",
@@ -478,9 +492,10 @@ class LlmViewModel(
     }
 
     fun clearAllLogs(onCleared: ((List<ApiLog>) -> Unit)? = null) {
+        val session = activeSession.value ?: return
         viewModelScope.launch {
-            val logs = repository.getAllLogsOneShot()
-            repository.clearLogs()
+            val logs = repository.getLogsForSessionOneShot(session.id)
+            repository.clearLogsForSession(session.id)
             if (logs.isNotEmpty()) {
                 onCleared?.invoke(logs)
             }

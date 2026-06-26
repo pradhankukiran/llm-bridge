@@ -43,10 +43,15 @@ class LlmRepository(
         return llmDao.getMessagesForConfigOneShot(configId)
     }
 
+    suspend fun getLogsForConfigOneShot(configId: Int): List<ApiLog> {
+        return llmDao.getLogsForConfigOneShot(configId)
+    }
+
     suspend fun restoreConfigurationSnapshot(
         config: LlmConfiguration,
         sessions: List<ChatSession>,
-        messages: List<ChatMessage>
+        messages: List<ChatMessage>,
+        logs: List<ApiLog>
     ) {
         llmDao.insertConfiguration(encryptConfig(config))
         if (sessions.isNotEmpty()) {
@@ -54,6 +59,9 @@ class LlmRepository(
         }
         if (messages.isNotEmpty()) {
             llmDao.insertMessages(messages)
+        }
+        if (logs.isNotEmpty()) {
+            llmDao.insertLogs(logs)
         }
     }
 
@@ -93,10 +101,13 @@ class LlmRepository(
         return llmDao.insertMessage(message)
     }
 
-    suspend fun restoreSessionSnapshot(session: ChatSession, messages: List<ChatMessage>) {
+    suspend fun restoreSessionSnapshot(session: ChatSession, messages: List<ChatMessage>, logs: List<ApiLog>) {
         llmDao.insertSession(session)
         if (messages.isNotEmpty()) {
             llmDao.insertMessages(messages)
+        }
+        if (logs.isNotEmpty()) {
+            llmDao.insertLogs(logs)
         }
     }
 

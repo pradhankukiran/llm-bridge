@@ -33,6 +33,7 @@ import com.example.ui.theme.StatusRedLight
 @Composable
 fun DiagnosticsLogsPane(
     recentLogs: List<ApiLog>,
+    sessionTitle: String?,
     onClearLogs: () -> Unit
 ) {
     var showClearConfirm by remember { mutableStateOf(false) }
@@ -50,7 +51,7 @@ fun DiagnosticsLogsPane(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Diagnostics",
+                text = sessionTitle?.let { "Diagnostics · $it" } ?: "Diagnostics",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -87,7 +88,7 @@ fun DiagnosticsLogsPane(
                     )
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
-                        text = "Diagnostics list is empty.\nRequests to active configurations will output logs here.",
+                        text = "No requests in this chat yet.",
                         fontSize = 13.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center

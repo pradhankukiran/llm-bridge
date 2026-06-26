@@ -125,6 +125,9 @@ interface LlmDao {
     @Query("SELECT * FROM api_logs WHERE sessionId = :sessionId ORDER BY timestamp DESC")
     suspend fun getLogsForSessionOneShot(sessionId: Int): List<ApiLog>
 
+    @Query("SELECT * FROM api_logs WHERE sessionId IN (SELECT id FROM chat_sessions WHERE configId = :configId) ORDER BY timestamp DESC")
+    suspend fun getLogsForConfigOneShot(configId: Int): List<ApiLog>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLog(log: ApiLog)
 
