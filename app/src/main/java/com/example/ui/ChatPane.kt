@@ -41,8 +41,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
@@ -68,10 +70,13 @@ fun ChatInterface(
     onStopGeneration: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    val density = LocalDensity.current
     val keyboardController = LocalSoftwareKeyboardController.current
     var inputText by remember { mutableStateOf("") }
     var mediaUris by remember(activeConfig?.id) { mutableStateOf("") }
     var mediaType by remember(activeConfig?.id) { mutableStateOf(activeConfig?.mediaInputType ?: "auto") }
+    var composerHeightPx by remember { mutableStateOf(0) }
+    val messageListBottomPadding = with(density) { composerHeightPx.toDp() } + 16.dp
     val mediaSupported = activeConfig != null
  
     val photoPickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
@@ -160,10 +165,18 @@ fun ChatInterface(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
                 reverseLayout = false,
-                contentPadding = PaddingValues(bottom = 120.dp, top = 16.dp, start = 16.dp, end = 16.dp),
+                contentPadding = PaddingValues(
+                    bottom = messageListBottomPadding,
+                    top = 16.dp,
+                    start = 16.dp,
+                    end = 16.dp
+                ),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                items(chatHistory) { msg ->
+                items(
+                    items = chatHistory,
+                    key = { msg -> chatMessageKey(msg) }
+                ) { msg ->
                     if (msg.role != "assistant" || msg.content.isNotEmpty()) {
                         ChatBubble(
                             message = msg,
@@ -174,7 +187,7 @@ fun ChatInterface(
                     }
                 }
                 if (showThinking) {
-                    item {
+                    item(key = "typing-indicator") {
                         TypingIndicatorBubble()
                     }
                 }
@@ -198,6 +211,7 @@ fun ChatInterface(
                 )
                 .navigationBarsPadding()
                 .imePadding()
+                .onSizeChanged { composerHeightPx = it.height }
                 .padding(horizontal = 16.dp, vertical = 16.dp)
         ) {
             // Media Attachment Preview
@@ -352,6 +366,11 @@ fun ChatInterface(
             }
         }
     }
+}
+
+private fun chatMessageKey(message: ChatMessage): String {
+    if (message.id != 0) return "message-${message.id}"
+    return "pending-${message.sessionId}-${message.role}-${message.timestamp}"
 }
 
 @OptIn(ExperimentalFoundationApi::class)
