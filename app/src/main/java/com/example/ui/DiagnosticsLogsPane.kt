@@ -29,6 +29,7 @@ fun DiagnosticsLogsPane(
     recentLogs: List<ApiLog>,
     onClearLogs: () -> Unit
 ) {
+    var showClearConfirm by remember { mutableStateOf(false) }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -57,7 +58,7 @@ fun DiagnosticsLogsPane(
                     color = Color(0xFFC62828),
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
-                        .clickable { onClearLogs() }
+                        .clickable { showClearConfirm = true }
                         .padding(4.dp)
                 )
             }
@@ -99,6 +100,30 @@ fun DiagnosticsLogsPane(
                 }
             }
         }
+    }
+
+    if (showClearConfirm) {
+        AlertDialog(
+            onDismissRequest = { showClearConfirm = false },
+            title = { Text("Clear all logs?") },
+            text = { Text("All request and response diagnostics will be permanently removed. This cannot be undone.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onClearLogs()
+                        showClearConfirm = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Clear")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearConfirm = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 
