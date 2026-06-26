@@ -23,7 +23,6 @@ class LlmClient(
 ) {
 
     suspend fun executeChatCall(
-        context: android.content.Context,
         config: LlmConfiguration,
         chatHistory: List<ChatMessage>,
         onChunkReceived: (String) -> Unit = {}
@@ -31,7 +30,7 @@ class LlmClient(
         val startTime = System.currentTimeMillis()
         try {
             val adapter = adapterFor(config)
-            val result = adapter.chat(AdapterChatRequest(context, config, chatHistory), onChunkReceived)
+            val result = adapter.chat(AdapterChatRequest(config, chatHistory), onChunkReceived)
             val durationMs = System.currentTimeMillis() - startTime
 
             if (result.responseCode in 200..299) {

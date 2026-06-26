@@ -9,7 +9,8 @@ import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
 class OpenAiCompatibleAdapter(
-    private val baseHttpClient: OkHttpClient
+    private val baseHttpClient: OkHttpClient,
+    private val mediaLoader: MediaLoader
 ) : LlmAdapter {
     private val jsonMediaType = "application/json; charset=utf-8".toMediaType()
 
@@ -90,13 +91,7 @@ class OpenAiCompatibleAdapter(
             .lineSequence()
             .map { it.trim() }
             .filter { it.isNotBlank() }
-            .map { uri ->
-                if (uri.startsWith("content://") || uri.startsWith("file://")) {
-                    convertUriToBase64DataUrl(request.context, uri)
-                } else {
-                    uri
-                }
-            }
+            .map { uri -> mediaLoader.loadAsDataUrl(uri) }
             .toList()
 
         val baseMessages = if (mediaUris.isEmpty()) {
@@ -133,25 +128,6 @@ class OpenAiCompatibleAdapter(
         }
 
         return finalMessages
-    }
-
-    private fun convertUriToBase64DataUrl(context: android.content.Context, uriString: String): String {
-        return try {
-            val uri = android.net.Uri.parse(uriString)
-            val mimeType = context.contentResolver.getType(uri) ?: "image/jpeg"
-            val inputStream = context.contentResolver.openInputStream(uri)
-            if (inputStream != null) {
-                val bytes = inputStream.readBytes()
-                inputStream.close()
-                val base64 = android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
-                "data:$mimeType;base64,$base64"
-            } else {
-                uriString
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("OpenAiCompatibleAdapter", "Failed to convert Uri to base64: $uriString", e)
-            uriString
-        }
     }
 
     private fun multimodalContent(text: String, mediaUris: List<String>, mediaInputType: String): JSONArray {

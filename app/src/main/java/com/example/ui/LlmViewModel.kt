@@ -1,10 +1,8 @@
 package com.example.ui
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import com.example.LlmBridgeApplication
 import com.example.api.LlmClient
@@ -33,10 +31,9 @@ import java.util.concurrent.TimeUnit
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class LlmViewModel(
-    application: Application,
     private val repository: LlmRepository,
     private val llmClient: LlmClient
-) : AndroidViewModel(application) {
+) : ViewModel() {
 
     // Loaded configurations
     val configurations: StateFlow<List<LlmConfiguration>>
@@ -285,7 +282,7 @@ class LlmViewModel(
             }
 
             // 3. Initiate API Call
-            val response = llmClient.executeChatCall(getApplication(), requestConfig, dbHistory) { chunk ->
+            val response = llmClient.executeChatCall(requestConfig, dbHistory) { chunk ->
                 if (config.stream) {
                     assistantResponseContent.append(chunk)
                     _streamingMessage.value = tempAssistantMsg.copy(content = assistantResponseContent.toString())
@@ -366,7 +363,6 @@ class LlmViewModel(
             ): T {
                 val application = checkNotNull(extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY]) as LlmBridgeApplication
                 return LlmViewModel(
-                    application,
                     application.container.repository,
                     application.container.llmClient
                 ) as T

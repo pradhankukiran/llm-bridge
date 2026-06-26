@@ -1,9 +1,11 @@
 package com.example
 
 import android.content.Context
+import com.example.api.AndroidMediaLoader
 import com.example.api.LlmClient
 import com.example.api.adapter.AnthropicMessagesAdapter
 import com.example.api.adapter.LlmAdapter
+import com.example.api.adapter.MediaLoader
 import com.example.api.adapter.OpenAiCompatibleAdapter
 import com.example.data.AppDatabase
 import com.example.data.LlmRepository
@@ -28,7 +30,11 @@ class AppContainerImpl(private val context: Context) : AppContainer {
     }
 
     private val openAiCompatibleAdapter: LlmAdapter by lazy {
-        OpenAiCompatibleAdapter(baseHttpClient)
+        OpenAiCompatibleAdapter(baseHttpClient, mediaLoader)
+    }
+
+    private val mediaLoader: MediaLoader by lazy {
+        AndroidMediaLoader(context)
     }
 
     private val anthropicAdapter: LlmAdapter by lazy {

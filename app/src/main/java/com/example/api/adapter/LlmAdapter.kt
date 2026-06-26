@@ -4,7 +4,6 @@ import com.example.data.ChatMessage
 import com.example.data.LlmConfiguration
 
 data class AdapterChatRequest(
-    val context: android.content.Context,
     val config: LlmConfiguration,
     val chatHistory: List<ChatMessage>
 )
