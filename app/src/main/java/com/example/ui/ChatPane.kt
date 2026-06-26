@@ -283,10 +283,11 @@ fun ChatInterface(
                         focusedTextColor = MaterialTheme.colorScheme.onSurface,
                         unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                     ),
-                    singleLine = true,
-                    maxLines = 1,
+                    singleLine = false,
+                    minLines = 1,
+                    maxLines = 4,
                     enabled = activeConfig != null,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default),
                     keyboardActions = KeyboardActions(
                         onSend = {
                             if (inputText.isNotBlank() && activeConfig != null) {
