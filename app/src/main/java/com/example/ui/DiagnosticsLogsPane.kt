@@ -3,6 +3,7 @@ package com.example.ui
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -23,6 +24,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.ApiLog
+import com.example.ui.theme.StatusAmberDark
+import com.example.ui.theme.StatusAmberLight
+import com.example.ui.theme.StatusGreenDark
+import com.example.ui.theme.StatusGreenLight
+import com.example.ui.theme.StatusRedDark
+import com.example.ui.theme.StatusRedLight
 
 @Composable
 fun DiagnosticsLogsPane(
@@ -131,12 +138,13 @@ fun DiagnosticsLogsPane(
 fun DiagnosticLogCard(log: ApiLog) {
     var isExpanded by remember { mutableStateOf(false) }
     val isSuccess = log.responseCode == 200
+    val dark = isSystemInDarkTheme()
 
     val indicatorColor = when {
-        log.responseCode != 200 -> Color(0xFFEF4444)
-        log.durationMs >= 4000 -> Color(0xFFEF4444)
-        log.durationMs >= 1500 -> Color(0xFFF59E0B)
-        else -> Color(0xFF10B981)
+        log.responseCode != 200 -> if (dark) StatusRedDark else StatusRedLight
+        log.durationMs >= 4000 -> if (dark) StatusRedDark else StatusRedLight
+        log.durationMs >= 1500 -> if (dark) StatusAmberDark else StatusAmberLight
+        else -> if (dark) StatusGreenDark else StatusGreenLight
     }
 
     OutlinedCard(

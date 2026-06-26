@@ -23,3 +23,11 @@ val LightSecondary = Color(0xFF0891B2)
 val LightTertiary = Color(0xFFC084FC)
 val LightText = Color(0xFF111827)
 val LightTextMuted = Color(0xFF6B7280)
+
+// Status indicator colours, per-theme (latency / HTTP status pills).
+val StatusGreenDark = Color(0xFF10B981)
+val StatusGreenLight = Color(0xFF059669)
+val StatusAmberDark = Color(0xFFF59E0B)
+val StatusAmberLight = Color(0xFFD97706)
+val StatusRedDark = Color(0xFFEF4444)
+val StatusRedLight = Color(0xFFDC2626)
