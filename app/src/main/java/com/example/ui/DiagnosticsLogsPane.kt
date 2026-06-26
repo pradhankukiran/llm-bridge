@@ -55,7 +55,7 @@ fun DiagnosticsLogsPane(
                 Text(
                     text = "Clear Logs",
                     fontSize = 11.sp,
-                    color = Color(0xFFC62828),
+                    color = MaterialTheme.colorScheme.error,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
                         .clickable { showClearConfirm = true }
