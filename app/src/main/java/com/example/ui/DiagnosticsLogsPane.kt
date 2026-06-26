@@ -110,7 +110,7 @@ fun DiagnosticsLogsPane(
         AlertDialog(
             onDismissRequest = { showClearConfirm = false },
             title = { Text("Clear all logs?") },
-            text = { Text("All request and response diagnostics will be permanently removed. This cannot be undone.") },
+            text = { Text("All request and response diagnostics will be removed. You can undo it briefly afterward.") },
             confirmButton = {
                 Button(
                     onClick = {
