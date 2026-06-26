@@ -413,21 +413,24 @@ fun ProviderSettingsPane(
                     onClick = {
                         if (baseUrl.isNotBlank() && modelName.isNotBlank()) {
                             val maxTokVal = maxTokens.toIntOrNull() ?: 4096
-                            val savedConfig = LlmConfiguration(
-                                id = configToEdit?.id ?: 0,
+                            val base = configToEdit ?: LlmConfiguration(
+                                name = generatedName,
+                                baseUrl = "",
+                                apiKey = "",
+                                modelName = "",
+                                apiType = apiType,
+                                isActive = false
+                            )
+                            val savedConfig = base.copy(
                                 name = generatedName,
                                 baseUrl = baseUrl.trim(),
                                 apiKey = apiKey.trim(),
                                 modelName = modelName.trim(),
                                 apiType = apiType,
-                                providerId = if (apiType == "ANTHROPIC") "anthropic" 
-                                             else "openai-compatible",
                                 maxTokens = maxTokVal,
                                 temperature = temperature.toDouble(),
                                 stream = stream,
-                                systemPrompt = systemPrompt.trim(),
-                                isActive = configToEdit?.isActive ?: false,
-                                modelOfferingId = configToEdit?.modelOfferingId ?: ""
+                                systemPrompt = systemPrompt.trim()
                             )
                             onSaveConfig(savedConfig)
                             editingConfig = null
