@@ -237,6 +237,7 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
                     onSendMessage = { text, mediaUris, mediaDisplayName, mediaType ->
                         viewModel.sendChatMessage(text, mediaUris, mediaDisplayName, mediaType)
                     },
+                    onRetryLastMessage = { viewModel.retryLastUserMessage() },
                     onStopGeneration = { viewModel.stopGeneration() }
                 )
                 AnimatedVisibility(

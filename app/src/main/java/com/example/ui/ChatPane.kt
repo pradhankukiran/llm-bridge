@@ -56,6 +56,7 @@ fun ChatInterface(
     isGenerating: Boolean,
     isWaitingForFirstChunk: Boolean,
     onSendMessage: (String, String, String, String) -> Unit,
+    onRetryLastMessage: () -> Unit,
     onStopGeneration: () -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -156,7 +157,11 @@ fun ChatInterface(
             ) {
                 items(chatHistory) { msg ->
                     if (msg.role != "assistant" || msg.content.isNotEmpty()) {
-                        ChatBubble(message = msg)
+                        ChatBubble(
+                            message = msg,
+                            showRetry = msg == chatHistory.lastOrNull() && msg.isError && !isGenerating,
+                            onRetry = onRetryLastMessage
+                        )
                     }
                 }
                 if (showThinking) {
@@ -341,7 +346,11 @@ fun ChatInterface(
 }
 
 @Composable
-fun ChatBubble(message: ChatMessage) {
+fun ChatBubble(
+    message: ChatMessage,
+    showRetry: Boolean = false,
+    onRetry: () -> Unit = {}
+) {
     val isUser = message.role == "user"
     val bubbleShape = RoundedCornerShape(
         topStart = 18.dp,
@@ -426,6 +435,15 @@ fun ChatBubble(message: ChatMessage) {
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
+                    }
+                }
+                if (showRetry) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    OutlinedButton(
+                        onClick = onRetry,
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Text("Retry")
                     }
                 }
             }

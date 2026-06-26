@@ -442,6 +442,24 @@ class LlmViewModel(
         generationJob?.cancel()
     }
 
+    fun retryLastUserMessage() {
+        val session = activeSession.value ?: return
+        if (_isGenerating.value) return
+
+        viewModelScope.launch {
+            val lastUserMessage = repository.getMessagesForSessionOneShot(session.id)
+                .lastOrNull { it.role == "user" }
+                ?: return@launch
+
+            sendChatMessage(
+                text = lastUserMessage.content,
+                mediaUris = lastUserMessage.mediaUri,
+                mediaDisplayName = lastUserMessage.mediaDisplayName,
+                mediaInputType = lastUserMessage.mediaInputType
+            )
+        }
+    }
+
     fun clearChatHistory(onCleared: ((List<ChatMessage>) -> Unit)? = null) {
         val session = activeSession.value ?: return
         viewModelScope.launch {
