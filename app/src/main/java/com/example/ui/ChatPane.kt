@@ -325,6 +325,8 @@ fun ChatInterface(
                         disabledContainerColor = Color.Transparent,
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
+                        errorIndicatorColor = Color.Transparent,
                         focusedTextColor = MaterialTheme.colorScheme.onSurface,
                         unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                     ),
