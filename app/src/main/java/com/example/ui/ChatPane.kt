@@ -263,7 +263,11 @@ fun ChatInterface(
                     onValueChange = { inputText = it },
                     placeholder = { 
                         Text(
-                            text = "Chat with ${activeConfig?.modelName?.substringAfter("/") ?: "select Model..."}...",
+                            text = if (activeConfig == null) {
+                                "Select a route to chat"
+                            } else {
+                                "Chat with ${activeConfig.modelName.substringAfter("/")}..."
+                            },
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                         ) 
                     },
@@ -281,6 +285,7 @@ fun ChatInterface(
                     ),
                     singleLine = true,
                     maxLines = 1,
+                    enabled = activeConfig != null,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                     keyboardActions = KeyboardActions(
                         onSend = {
