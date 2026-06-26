@@ -4,31 +4,43 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Chat bubble left (incoming) -->
+    <!-- Chat bubble left (incoming / client) -->
     <path
         android:fillColor="@color/ic_launcher_bubble_left"
-        android:pathData="M30,42 L58,42 C60.2,42 62,43.8 62,46 L62,58 C62,60.2 60.2,62 58,62 L36,62 L30,68 L30,62 L30,62 C27.8,62 26,60.2 26,58 L26,46 C26,43.8 27.8,42 30,42 Z" />
+        android:pathData="M28,34 h22 c3.3,0 6,2.7 6,6 v12 c0,3.3 -2.7,6 -6,6 h-12 l-8,8 v-8 c-3.3,0 -6,-2.7 -6,-6 v-12 c0,-3.3 2.7,-6 6,-6 z" />
 
-    <!-- Chat bubble right (outgoing) -->
+    <!-- Typing indicator dots inside Left Bubble -->
+    <path
+        android:fillColor="@color/ic_launcher_background"
+        android:pathData="M33.5,46 A1.5,1.5 0 1,1 36.5,46 A1.5,1.5 0 1,1 33.5,46 Z" />
+    <path
+        android:fillColor="@color/ic_launcher_background"
+        android:pathData="M38.5,46 A1.5,1.5 0 1,1 41.5,46 A1.5,1.5 0 1,1 38.5,46 Z" />
+    <path
+        android:fillColor="@color/ic_launcher_background"
+        android:pathData="M43.5,46 A1.5,1.5 0 1,1 46.5,46 A1.5,1.5 0 1,1 43.5,46 Z" />
+
+    <!-- Cutout mask to separate the bubbles with a clean gap -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="@color/ic_launcher_background"
+        android:strokeWidth="5"
+        android:pathData="M58,46 h22 c3.3,0 6,2.7 6,6 v12 c0,3.3 -2.7,6 -6,6 h-8 l8,8 v-8 h-16 c-3.3,0 -6,-2.7 -6,-6 v-12 c0,-3.3 2.7,-6 6,-6 z" />
+
+    <!-- Chat bubble right (outgoing / AI) -->
     <path
         android:fillColor="@color/ic_launcher_bubble_right"
-        android:pathData="M50,48 L78,48 C80.2,48 82,49.8 82,52 L82,64 C82,66.2 80.2,68 78,68 L78,68 L78,74 L72,68 L50,68 C47.8,68 46,66.2 46,64 L46,52 C46,49.8 47.8,48 50,48 Z" />
+        android:pathData="M58,46 h22 c3.3,0 6,2.7 6,6 v12 c0,3.3 -2.7,6 -6,6 h-8 l8,8 v-8 h-16 c-3.3,0 -6,-2.7 -6,-6 v-12 c0,-3.3 2.7,-6 6,-6 z" />
 
-    <!-- Bridge connector dots -->
+    <!-- Typing indicator dots inside Right Bubble -->
     <path
-        android:fillColor="@color/ic_launcher_connector"
-        android:pathData="M34,51 A1.5,1.5 0 1,1 37,51 A1.5,1.5 0 1,1 34,51 Z" />
+        android:fillColor="@color/ic_launcher_background"
+        android:pathData="M63.5,58 A1.5,1.5 0 1,1 66.5,58 A1.5,1.5 0 1,1 63.5,58 Z" />
     <path
-        android:fillColor="@color/ic_launcher_connector"
-        android:pathData="M40,51 A1.5,1.5 0 1,1 43,51 A1.5,1.5 0 1,1 40,51 Z" />
+        android:fillColor="@color/ic_launcher_background"
+        android:pathData="M68.5,58 A1.5,1.5 0 1,1 71.5,58 A1.5,1.5 0 1,1 68.5,58 Z" />
     <path
-        android:fillColor="@color/ic_launcher_connector"
-        android:pathData="M46,51 A1.5,1.5 0 1,1 49,51 A1.5,1.5 0 1,1 46,51 Z" />
+        android:fillColor="@color/ic_launcher_background"
+        android:pathData="M73.5,58 A1.5,1.5 0 1,1 76.5,58 A1.5,1.5 0 1,1 73.5,58 Z" />
 
-    <!-- Arrow/bridge line connecting the bubbles -->
-    <path
-        android:fillColor="@color/ic_launcher_connector"
-        android:pathData="M56,57 L60,57 C62,57 64,55 64,53 L64,52"
-        android:strokeWidth="1.5"
-        android:strokeColor="@color/ic_launcher_connector" />
 </vector>
