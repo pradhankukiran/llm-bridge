@@ -176,18 +176,18 @@ fun ProviderSettingsPane(
         // --- ADD/EDIT ROUTE FORM VIEW ---
         val configToEdit = editingConfig
         
-        var baseUrl by remember { mutableStateOf(configToEdit?.baseUrl ?: "") }
-        var apiKey by remember { mutableStateOf(configToEdit?.apiKey ?: "") }
-        var modelName by remember { mutableStateOf(configToEdit?.modelName ?: "") }
-        
-        var systemPrompt by remember { mutableStateOf(configToEdit?.systemPrompt ?: "") }
-        var temperature by remember { mutableStateOf(configToEdit?.temperature?.toFloat() ?: 1.0f) }
-        var maxTokens by remember { mutableStateOf(configToEdit?.maxTokens?.toString() ?: "4096") }
-        var stream by remember { mutableStateOf(configToEdit?.stream ?: true) }
-        
+        var baseUrl by remember(configToEdit) { mutableStateOf(configToEdit?.baseUrl ?: "") }
+        var apiKey by remember(configToEdit) { mutableStateOf(configToEdit?.apiKey ?: "") }
+        var modelName by remember(configToEdit) { mutableStateOf(configToEdit?.modelName ?: "") }
+
+        var systemPrompt by remember(configToEdit) { mutableStateOf(configToEdit?.systemPrompt ?: "") }
+        var temperature by remember(configToEdit) { mutableStateOf(configToEdit?.temperature?.toFloat() ?: 1.0f) }
+        var maxTokens by remember(configToEdit) { mutableStateOf(configToEdit?.maxTokens?.toString() ?: "4096") }
+        var stream by remember(configToEdit) { mutableStateOf(configToEdit?.stream ?: true) }
+
         var isKeyVisible by remember { mutableStateOf(false) }
 
-        var apiType by remember { mutableStateOf(configToEdit?.apiType ?: "OPENAI") }
+        var apiType by remember(configToEdit) { mutableStateOf(configToEdit?.apiType ?: "OPENAI") }
         val generatedName = remember(baseUrl, modelName) {
             val domain = try {
                 val uri = java.net.URI(baseUrl)
