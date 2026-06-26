@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Job
@@ -318,6 +319,7 @@ class LlmViewModel(
 
             _isGenerating.value = true
             _isWaitingForFirstChunk.value = true
+            val assistantResponseContent = java.lang.StringBuilder()
 
             try {
                 // 1. Save user message to DB
@@ -327,7 +329,6 @@ class LlmViewModel(
                 // 2. Fetch history from DB (guaranteed to include userMsg) to feed the model
                 val dbHistory = repository.getMessagesForSessionOneShot(sessionToUse.id)
 
-                val assistantResponseContent = java.lang.StringBuilder()
                 val tempAssistantMsg = ChatMessage(
                     sessionId = sessionToUse.id,
                     role = "assistant",
@@ -402,6 +403,18 @@ class LlmViewModel(
                         )
                     }
                 }
+            } catch (e: CancellationException) {
+                val partial = assistantResponseContent.toString().trim()
+                if (partial.isNotEmpty()) {
+                    repository.insertMessage(
+                        ChatMessage(
+                            sessionId = sessionToUse.id,
+                            role = "assistant",
+                            content = "$partial\n\n_[generation stopped]_"
+                        )
+                    )
+                }
+                throw e
             } finally {
                 _isGenerating.value = false
                 _isWaitingForFirstChunk.value = false
