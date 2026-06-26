@@ -386,7 +386,7 @@ fun HeaderBlock(
                                             scaleY = scale
                                         }
                                         .size(6.dp)
-                                        .background(Color(0xFF10B981), CircleShape)
+                                        .background(MaterialTheme.colorScheme.secondary, CircleShape)
                                 )
                                 Text(
                                     text = modelName,
