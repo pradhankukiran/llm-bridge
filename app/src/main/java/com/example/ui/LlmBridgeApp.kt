@@ -97,7 +97,10 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet(
-                modifier = Modifier.fillMaxHeight().width(300.dp)
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(0.86f)
+                    .widthIn(max = 360.dp)
             ) {
                 Column(
                     modifier = Modifier
@@ -488,6 +491,7 @@ fun HeaderBlock(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ActiveRouteStrip(
     activeConfig: LlmConfiguration?,
@@ -500,65 +504,73 @@ private fun ActiveRouteStrip(
         color = MaterialTheme.colorScheme.surface,
         tonalElevation = 1.dp
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 40.dp)
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            val config = activeConfig
-            if (config == null) {
-                Icon(
-                    imageVector = Icons.Default.Route,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(18.dp)
-                )
-                Text(
-                    text = "Select a route",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.SemiBold
-                )
-            } else {
-                val host = remember(config.baseUrl) {
-                    runCatching { java.net.URI(config.baseUrl).host }
-                        .getOrNull()
-                        ?.removePrefix("www.")
-                        ?: config.baseUrl.substringAfter("://").substringBefore("/")
-                }
-                Text(
-                    text = host.ifBlank { "Custom route" },
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = "·",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = config.modelName,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
-                )
-                AssistChip(
-                    onClick = onClick,
-                    label = {
-                        Text(
-                            text = if (config.apiType == "ANTHROPIC") "Anthropic" else "OpenAI",
-                            maxLines = 1
+        BoxWithConstraints {
+            val showProtocolChip = maxWidth >= 360.dp
+            val hostMaxWidth = if (maxWidth >= 360.dp) 140.dp else 96.dp
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 40.dp)
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                val config = activeConfig
+                if (config == null) {
+                    Icon(
+                        imageVector = Icons.Default.Route,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        text = "Select a route",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                } else {
+                    val host = remember(config.baseUrl) {
+                        runCatching { java.net.URI(config.baseUrl).host }
+                            .getOrNull()
+                            ?.removePrefix("www.")
+                            ?: config.baseUrl.substringAfter("://").substringBefore("/")
+                    }
+                    Text(
+                        text = host.ifBlank { "Custom route" },
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.widthIn(max = hostMaxWidth)
+                    )
+                    Text(
+                        text = "·",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = config.modelName,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+                    if (showProtocolChip) {
+                        AssistChip(
+                            onClick = onClick,
+                            label = {
+                                Text(
+                                    text = if (config.apiType == "ANTHROPIC") "Anthropic" else "OpenAI",
+                                    maxLines = 1
+                                )
+                            }
                         )
                     }
-                )
+                }
             }
         }
     }
