@@ -56,15 +56,18 @@ fun DiagnosticsLogsPane(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             if (recentLogs.isNotEmpty()) {
-                Text(
-                    text = "Clear Logs",
-                    fontSize = 11.sp,
-                    color = MaterialTheme.colorScheme.error,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .clickable { showClearConfirm = true }
-                        .padding(4.dp)
-                )
+                TextButton(
+                    onClick = { showClearConfirm = true },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text(
+                        text = "Clear logs",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
 
