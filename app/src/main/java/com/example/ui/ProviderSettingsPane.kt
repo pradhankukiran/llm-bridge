@@ -1,7 +1,8 @@
 package com.example.ui
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -30,7 +31,7 @@ import com.example.data.LlmConfiguration
 
 data class ProviderOption(val name: String, val id: String, val defaultUrl: String)
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun ProviderSettingsPane(
     activeConfig: LlmConfiguration?,
@@ -71,7 +72,10 @@ fun ProviderSettingsPane(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { onSelectActiveConfig(config.id) },
+                            .combinedClickable(
+                                onClick = { onSelectActiveConfig(config.id) },
+                                onLongClick = { editingConfig = config }
+                            ),
                         colors = CardDefaults.cardColors(
                             containerColor = if (isActive) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f) 
                                              else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
@@ -178,7 +182,7 @@ fun ProviderSettingsPane(
             AlertDialog(
                 onDismissRequest = { configPendingDelete = null },
                 title = { Text("Delete route?") },
-                text = { Text("\"\u201C${pendingDelete.name}\u201D and all its conversations and logs will be permanently deleted. This cannot be undone.") },
+                text = { Text("\"${pendingDelete.name}\" and all its conversations will be deleted. You can undo it briefly afterward.") },
                 confirmButton = {
                     Button(
                         onClick = {
@@ -217,7 +221,10 @@ fun ProviderSettingsPane(
         var systemPrompt by remember(configToEdit) { mutableStateOf(configToEdit?.systemPrompt ?: "") }
         var temperature by remember(configToEdit) { mutableStateOf(configToEdit?.temperature?.toFloat() ?: 1.0f) }
         var maxTokens by remember(configToEdit) { mutableStateOf(configToEdit?.maxTokens?.toString() ?: "4096") }
+        var lastValidMaxTokens by remember(configToEdit) { mutableStateOf(configToEdit?.maxTokens ?: 4096) }
         var stream by remember(configToEdit) { mutableStateOf(configToEdit?.stream ?: true) }
+        var saveAttempted by remember(configToEdit) { mutableStateOf(false) }
+        var isSavingConfig by remember(configToEdit) { mutableStateOf(false) }
 
         var isKeyVisible by remember { mutableStateOf(false) }
 
@@ -231,6 +238,17 @@ fun ProviderSettingsPane(
             }
             if (modelName.isNotBlank()) "$domain - $modelName" else domain.ifBlank { "Custom Route" }
         }
+        val trimmedBaseUrl = baseUrl.trim()
+        val baseUrlIsValid = remember(trimmedBaseUrl) {
+            runCatching {
+                val uri = java.net.URI(trimmedBaseUrl)
+                uri.scheme in setOf("http", "https") && !uri.host.isNullOrBlank()
+            }.getOrDefault(false)
+        }
+        val modelNameIsValid = modelName.isNotBlank()
+        val maxTokensValue = maxTokens.toIntOrNull()
+        val maxTokensIsValid = maxTokens.isBlank() || (maxTokensValue != null && maxTokensValue > 0)
+        val formIsValid = baseUrlIsValid && modelNameIsValid && maxTokensIsValid
         
         Column(
             modifier = Modifier
@@ -303,7 +321,9 @@ fun ProviderSettingsPane(
                         value = baseUrl,
                         onValueChange = { baseUrl = it },
                         label = "API Base URL",
-                        placeholder = if (apiType == "ANTHROPIC") "https://api.anthropic.com/v1" else "https://api.openai.com/v1"
+                        placeholder = if (apiType == "ANTHROPIC") "https://api.anthropic.com/v1" else "https://api.openai.com/v1",
+                        isError = saveAttempted && !baseUrlIsValid,
+                        supportingText = if (saveAttempted && !baseUrlIsValid) "Enter a valid http or https URL." else null
                     )
 
                     LlmInputField(
@@ -327,7 +347,9 @@ fun ProviderSettingsPane(
                         value = modelName,
                         onValueChange = { modelName = it },
                         label = "Model Name",
-                        placeholder = "e.g. gpt-4o, claude-3-5-sonnet, llama3"
+                        placeholder = "e.g. gpt-4o, claude-3-5-sonnet, llama3",
+                        isError = saveAttempted && !modelNameIsValid,
+                        supportingText = if (saveAttempted && !modelNameIsValid) "Model name is required." else null
                     )
 
                     Row(
@@ -423,9 +445,22 @@ fun ProviderSettingsPane(
 
                     LlmInputField(
                         value = maxTokens,
-                        onValueChange = { maxTokens = it },
+                        onValueChange = { value ->
+                            if (value.all { it.isDigit() }) {
+                                maxTokens = value
+                                value.toIntOrNull()?.takeIf { it > 0 }?.let { lastValidMaxTokens = it }
+                            }
+                        },
                         label = "Max Tokens",
                         placeholder = "e.g. 4096",
+                        isError = saveAttempted && !maxTokensIsValid,
+                        supportingText = if (maxTokens.isBlank()) {
+                            "Leaving this blank restores $lastValidMaxTokens."
+                        } else if (saveAttempted && !maxTokensIsValid) {
+                            "Enter a positive number."
+                        } else {
+                            null
+                        },
                         keyboardOptions = KeyboardOptions(
                             keyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
                             imeAction = ImeAction.Done
@@ -453,8 +488,10 @@ fun ProviderSettingsPane(
 
                 Button(
                     onClick = {
-                        if (baseUrl.isNotBlank() && modelName.isNotBlank()) {
-                            val maxTokVal = maxTokens.toIntOrNull() ?: 4096
+                        saveAttempted = true
+                        if (formIsValid && !isSavingConfig) {
+                            isSavingConfig = true
+                            val maxTokVal = maxTokens.toIntOrNull() ?: lastValidMaxTokens
                             val base = configToEdit ?: LlmConfiguration(
                                 name = generatedName,
                                 baseUrl = "",
@@ -479,7 +516,7 @@ fun ProviderSettingsPane(
                             isAddingNew = false
                         }
                     },
-                    enabled = baseUrl.isNotBlank() && modelName.isNotBlank(),
+                    enabled = !isSavingConfig,
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp)
                 ) {
@@ -505,7 +542,9 @@ fun LlmInputField(
     minLines: Int = 1,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     trailingIcon: @Composable (() -> Unit)? = null,
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Default
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    isError: Boolean = false,
+    supportingText: String? = null
 ) {
     OutlinedTextField(
         value = value,
@@ -530,6 +569,10 @@ fun LlmInputField(
         visualTransformation = visualTransformation,
         trailingIcon = trailingIcon,
         keyboardOptions = keyboardOptions,
+        isError = isError,
+        supportingText = supportingText?.let { message ->
+            { Text(message) }
+        },
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = MaterialTheme.colorScheme.primary,
