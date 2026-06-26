@@ -17,6 +17,10 @@ class LlmRepository(
 
     val recentLogs: Flow<List<ApiLog>> = llmDao.getRecentLogs()
 
+    fun getLogsForSession(sessionId: Int): Flow<List<ApiLog>> {
+        return llmDao.getLogsForSession(sessionId)
+    }
+
     suspend fun getActiveConfigurationOneShot(): LlmConfiguration? =
         llmDao.getActiveConfigurationOneShot()?.let { decryptConfig(it) }
 
@@ -114,8 +118,16 @@ class LlmRepository(
         llmDao.clearLogs()
     }
 
+    suspend fun clearLogsForSession(sessionId: Int) {
+        llmDao.clearLogsForSession(sessionId)
+    }
+
     suspend fun getAllLogsOneShot(): List<ApiLog> {
         return llmDao.getAllLogsOneShot()
+    }
+
+    suspend fun getLogsForSessionOneShot(sessionId: Int): List<ApiLog> {
+        return llmDao.getLogsForSessionOneShot(sessionId)
     }
 
     suspend fun restoreLogs(logs: List<ApiLog>) {

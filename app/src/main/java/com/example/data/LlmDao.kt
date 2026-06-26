@@ -35,9 +35,13 @@ interface LlmDao {
     @Query("DELETE FROM chat_messages WHERE sessionId IN (SELECT id FROM chat_sessions WHERE configId = :configId)")
     suspend fun deleteMessagesForConfig(configId: Int)
 
+    @Query("DELETE FROM api_logs WHERE sessionId IN (SELECT id FROM chat_sessions WHERE configId = :configId)")
+    suspend fun deleteLogsForConfig(configId: Int)
+
     @Transaction
     suspend fun deleteConfigurationAndMessages(id: Int) {
         deleteConfigurationById(id)
+        deleteLogsForConfig(id)
         deleteMessagesForConfig(id)
         deleteSessionsForConfig(id)
     }
@@ -79,9 +83,13 @@ interface LlmDao {
     @Query("DELETE FROM chat_messages WHERE sessionId = :sessionId")
     suspend fun deleteMessagesForSession(sessionId: Int)
 
+    @Query("DELETE FROM api_logs WHERE sessionId = :sessionId")
+    suspend fun deleteLogsForSession(sessionId: Int)
+
     @Transaction
     suspend fun deleteSessionAndMessages(sessionId: Int) {
         deleteSessionById(sessionId)
+        deleteLogsForSession(sessionId)
         deleteMessagesForSession(sessionId)
     }
 
@@ -108,8 +116,14 @@ interface LlmDao {
     @Query("SELECT * FROM api_logs ORDER BY timestamp DESC LIMIT 50")
     fun getRecentLogs(): Flow<List<ApiLog>>
 
+    @Query("SELECT * FROM api_logs WHERE sessionId = :sessionId ORDER BY timestamp DESC LIMIT 50")
+    fun getLogsForSession(sessionId: Int): Flow<List<ApiLog>>
+
     @Query("SELECT * FROM api_logs ORDER BY timestamp DESC")
     suspend fun getAllLogsOneShot(): List<ApiLog>
+
+    @Query("SELECT * FROM api_logs WHERE sessionId = :sessionId ORDER BY timestamp DESC")
+    suspend fun getLogsForSessionOneShot(sessionId: Int): List<ApiLog>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLog(log: ApiLog)
@@ -119,4 +133,7 @@ interface LlmDao {
 
     @Query("DELETE FROM api_logs")
     suspend fun clearLogs()
+
+    @Query("DELETE FROM api_logs WHERE sessionId = :sessionId")
+    suspend fun clearLogsForSession(sessionId: Int)
 }
