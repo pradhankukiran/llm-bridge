@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
 import java.util.concurrent.TimeUnit
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -63,6 +64,8 @@ class LlmViewModel(
     // Current active session ID
     private val _activeSessionId = MutableStateFlow<Int?>(null)
     val activeSessionId: StateFlow<Int?> = _activeSessionId.asStateFlow()
+
+    private var generationJob: Job? = null
 
     init {
 
@@ -246,7 +249,7 @@ class LlmViewModel(
             config
         }
 
-        viewModelScope.launch {
+        generationJob = viewModelScope.launch {
             val sessionToUse = if (currentSession == null) {
                 val title = if (text.length > 25) text.take(25) + "..." else text
                 val newId = repository.insertSession(ChatSession(configId = config.id, title = title))
@@ -345,6 +348,15 @@ class LlmViewModel(
 
             _isGenerating.value = false
         }
+        generationJob?.invokeOnCompletion {
+            _isGenerating.value = false
+            _streamingMessage.value = null
+            generationJob = null
+        }
+    }
+
+    fun stopGeneration() {
+        generationJob?.cancel()
     }
 
     fun clearChatHistory() {

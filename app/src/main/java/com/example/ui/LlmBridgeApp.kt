@@ -195,7 +195,8 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
                     activeConfig = activeConfig,
                     chatHistory = chatHistory,
                     isGenerating = isGenerating,
-                    onSendMessage = { text, mediaUris, mediaType -> viewModel.sendChatMessage(text, mediaUris, mediaType) }
+                    onSendMessage = { text, mediaUris, mediaType -> viewModel.sendChatMessage(text, mediaUris, mediaType) },
+                    onStopGeneration = { viewModel.stopGeneration() }
                 )
             }
         }

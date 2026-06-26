@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -49,7 +50,8 @@ fun ChatInterface(
     activeConfig: LlmConfiguration?,
     chatHistory: List<ChatMessage>,
     isGenerating: Boolean,
-    onSendMessage: (String, String, String) -> Unit
+    onSendMessage: (String, String, String) -> Unit,
+    onStopGeneration: () -> Unit = {}
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     var inputText by remember { mutableStateOf("") }
@@ -287,23 +289,33 @@ fun ChatInterface(
                         .size(36.dp)
                         .clip(CircleShape)
                         .background(
-                            if (activeConfig != null && inputText.isNotBlank() && !isGenerating) 
-                                MaterialTheme.colorScheme.primary 
-                            else 
+                            if (isGenerating) MaterialTheme.colorScheme.error
+                            else if (activeConfig != null && inputText.isNotBlank())
+                                MaterialTheme.colorScheme.primary
+                            else
                                 MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.15f)
                         )
-                        .clickable(enabled = activeConfig != null && inputText.isNotBlank() && !isGenerating) {
-                            onSendMessage(inputText, mediaUris, mediaType)
-                            inputText = ""
-                            mediaUris = ""
-                            keyboardController?.hide()
+                        .clickable(
+                            enabled = if (isGenerating) true
+                                      else activeConfig != null && inputText.isNotBlank()
+                        ) {
+                            if (isGenerating) {
+                                onStopGeneration()
+                            } else {
+                                onSendMessage(inputText, mediaUris, mediaType)
+                                inputText = ""
+                                mediaUris = ""
+                                keyboardController?.hide()
+                            }
                         },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Send,
-                        contentDescription = "Send Message",
-                        tint = if (activeConfig != null && inputText.isNotBlank() && !isGenerating) Color.White else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                        imageVector = if (isGenerating) Icons.Default.Stop else Icons.AutoMirrored.Filled.Send,
+                        contentDescription = if (isGenerating) "Stop generation" else "Send Message",
+                        tint = if (isGenerating) Color.White
+                               else if (activeConfig != null && inputText.isNotBlank()) Color.White
+                               else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                         modifier = Modifier.size(16.dp)
                     )
                 }
