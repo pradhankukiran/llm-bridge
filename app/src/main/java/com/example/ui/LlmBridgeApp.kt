@@ -142,25 +142,23 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
                                         horizontalArrangement = Arrangement.spacedBy(2.dp)
                                     ) {
                                         IconButton(
-                                            onClick = { renamingSession = session },
-                                            modifier = Modifier.size(24.dp)
+                                            onClick = { renamingSession = session }
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Default.Edit,
                                                 contentDescription = "Rename",
                                                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                                modifier = Modifier.size(14.dp)
+                                                modifier = Modifier.size(18.dp)
                                             )
                                         }
                                         IconButton(
-                                            onClick = { sessionPendingDelete = session },
-                                            modifier = Modifier.size(24.dp)
+                                            onClick = { sessionPendingDelete = session }
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Default.Delete,
                                                 contentDescription = "Delete",
                                                 tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
-                                                modifier = Modifier.size(14.dp)
+                                                modifier = Modifier.size(18.dp)
                                             )
                                         }
                                     }
