@@ -46,6 +46,7 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
     var showLogsSheet by remember { mutableStateOf(false) }
     var renamingSession by remember { mutableStateOf<ChatSession?>(null) }
     var showClearChatConfirm by remember { mutableStateOf(false) }
+    var sessionPendingDelete by remember { mutableStateOf<ChatSession?>(null) }
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -152,7 +153,7 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
                                             )
                                         }
                                         IconButton(
-                                            onClick = { viewModel.deleteSession(session.id) },
+                                            onClick = { sessionPendingDelete = session },
                                             modifier = Modifier.size(24.dp)
                                         ) {
                                             Icon(
@@ -255,6 +256,31 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
             },
             dismissButton = {
                 TextButton(onClick = { showClearChatConfirm = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    val pendingSessionDelete = sessionPendingDelete
+    if (pendingSessionDelete != null) {
+        AlertDialog(
+            onDismissRequest = { sessionPendingDelete = null },
+            title = { Text("Delete conversation?") },
+            text = { Text("\"\u201C${pendingSessionDelete.title}\u201D and all its messages will be permanently deleted. This cannot be undone.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.deleteSession(pendingSessionDelete.id)
+                        sessionPendingDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { sessionPendingDelete = null }) {
                     Text("Cancel")
                 }
             }
