@@ -39,7 +39,7 @@ fun DiagnosticsLogsPane(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .fillMaxHeight(0.85f)
+            .fillMaxHeight()
             .padding(horizontal = 20.dp)
     ) {
         Row(
