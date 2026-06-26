@@ -218,13 +218,13 @@ fun ChatInterface(
                     }
                     IconButton(
                         onClick = { mediaUris = "" },
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = "Clear attachment",
                             tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 }
@@ -301,7 +301,7 @@ fun ChatInterface(
 
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
+                        .size(48.dp)
                         .clip(CircleShape)
                         .background(
                             if (isGenerating) MaterialTheme.colorScheme.error
@@ -331,7 +331,7 @@ fun ChatInterface(
                         tint = if (isGenerating) Color.White
                                else if (activeConfig != null && inputText.isNotBlank()) Color.White
                                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
