@@ -50,11 +50,10 @@ fun DiagnosticsLogsPane(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "PAYLOAD & CALL DIAGNOSTICS",
+                text = "Diagnostics",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                letterSpacing = 1.sp
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             if (recentLogs.isNotEmpty()) {
                 Text(
@@ -227,11 +226,10 @@ fun DiagnosticLogCard(log: ApiLog) {
                         Spacer(modifier = Modifier.height(10.dp))
                         
                         Text(
-                            text = "REQUEST PAYLOAD",
+                            text = "Request payload",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
-                            letterSpacing = 1.sp
+                            color = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Surface(
@@ -252,11 +250,10 @@ fun DiagnosticLogCard(log: ApiLog) {
                         Spacer(modifier = Modifier.height(12.dp))
 
                         Text(
-                            text = "RESPONSE SNAPSHOT",
+                            text = "Response snapshot",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = if (isSuccess) MaterialTheme.colorScheme.secondary else (if (dark) StatusRedDark else StatusRedLight),
-                            letterSpacing = 1.sp
+                            color = if (isSuccess) MaterialTheme.colorScheme.secondary else (if (dark) StatusRedDark else StatusRedLight)
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Surface(

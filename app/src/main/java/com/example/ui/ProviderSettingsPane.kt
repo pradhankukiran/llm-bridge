@@ -54,7 +54,7 @@ fun ProviderSettingsPane(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "API ROUTING GATEWAY",
+                text = "API routing gateway",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -167,7 +167,7 @@ fun ProviderSettingsPane(
                 Icon(imageVector = Icons.Default.Add, contentDescription = "Add New Route")
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "ADD NEW ROUTE",
+                    text = "Add new route",
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -249,7 +249,7 @@ fun ProviderSettingsPane(
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = if (configToEdit != null) "EDIT ROUTE" else "ADD NEW ROUTE",
+                    text = if (configToEdit != null) "Edit route" else "Add new route",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -268,11 +268,10 @@ fun ProviderSettingsPane(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Text(
-                        text = "CONNECTION SETTINGS",
+                        text = "Connection settings",
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                        letterSpacing = 1.sp
+                        color = MaterialTheme.colorScheme.primary
                     )
 
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -374,11 +373,10 @@ fun ProviderSettingsPane(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Text(
-                        text = "MODEL CONFIGURATION",
+                        text = "Model configuration",
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.secondary,
-                        letterSpacing = 1.sp
+                        color = MaterialTheme.colorScheme.secondary
                     )
 
                     LlmInputField(
@@ -448,7 +446,7 @@ fun ProviderSettingsPane(
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
-                        text = "CANCEL",
+                        text = "Cancel",
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -486,7 +484,7 @@ fun ProviderSettingsPane(
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
-                        text = "SAVE ROUTE",
+                        text = "Save route",
                         fontWeight = FontWeight.Bold
                     )
                 }

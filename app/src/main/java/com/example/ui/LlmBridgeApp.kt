@@ -64,7 +64,7 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = "CONVERSATIONS",
+                        text = "Conversations",
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
