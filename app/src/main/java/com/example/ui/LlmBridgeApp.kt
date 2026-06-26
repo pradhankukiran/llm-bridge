@@ -299,6 +299,7 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
                     onClick = {
                         viewModel.deleteSession(pendingSessionDelete.id) { snapshot ->
                             scope.launch {
+                                drawerState.close()
                                 val result = snackbarHostState.showSnackbar(
                                     message = "Conversation deleted",
                                     actionLabel = "Undo",
@@ -339,6 +340,7 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
                     viewModel.selectActiveConfiguration(id)
                 },
                 onDeleteConfig = { id ->
+                    showSettingsSheet = false
                     viewModel.deleteConfiguration(id) { snapshot ->
                         scope.launch {
                             val result = snackbarHostState.showSnackbar(
@@ -365,6 +367,7 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
             DiagnosticsLogsPane(
                 recentLogs = recentLogs,
                 onClearLogs = {
+                    showLogsSheet = false
                     viewModel.clearAllLogs { deletedLogs ->
                         scope.launch {
                             val result = snackbarHostState.showSnackbar(
