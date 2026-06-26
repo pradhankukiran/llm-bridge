@@ -97,7 +97,7 @@ fun ChatInterface(
     }
     val showThinking = isWaitingForFirstChunk
 
-    LaunchedEffect(chatHistory.size, showThinking) {
+    LaunchedEffect(chatHistory.size, showThinking, chatHistory.lastOrNull()?.content) {
         val targetIndex = if (showThinking) chatHistory.size else chatHistory.size - 1
         if (targetIndex >= 0) {
             val layoutInfo = listState.layoutInfo
