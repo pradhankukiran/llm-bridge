@@ -413,7 +413,7 @@ fun HeaderBlock(
                 }
                 IconButton(onClick = onLogsClick) {
                     Icon(
-                        imageVector = Icons.Default.Info,
+                        imageVector = Icons.Default.BugReport,
                         contentDescription = "Diagnostics Logs",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
