@@ -42,6 +42,7 @@ fun ProviderSettingsPane(
 ) {
     var editingConfig by remember { mutableStateOf<LlmConfiguration?>(null) }
     var isAddingNew by remember(configurations) { mutableStateOf(configurations.isEmpty()) }
+    var configPendingDelete by remember { mutableStateOf<LlmConfiguration?>(null) }
 
     if (editingConfig == null && !isAddingNew) {
         // --- ROUTE MANAGER LIST VIEW ---
@@ -144,7 +145,7 @@ fun ProviderSettingsPane(
                                     )
                                 }
                                 if (configurations.size > 1) {
-                                    IconButton(onClick = { onDeleteConfig(config.id) }) {
+                                    IconButton(onClick = { configPendingDelete = config }) {
                                         Icon(
                                             imageVector = Icons.Default.Delete,
                                             contentDescription = "Delete Route",
@@ -171,6 +172,31 @@ fun ProviderSettingsPane(
                     fontWeight = FontWeight.Bold
                 )
             }
+        }
+
+        val pendingDelete = configPendingDelete
+        if (pendingDelete != null) {
+            AlertDialog(
+                onDismissRequest = { configPendingDelete = null },
+                title = { Text("Delete route?") },
+                text = { Text("\"\u201C${pendingDelete.name}\u201D and all its conversations and logs will be permanently deleted. This cannot be undone.") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            onDeleteConfig(pendingDelete.id)
+                            configPendingDelete = null
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Text("Delete")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { configPendingDelete = null }) {
+                        Text("Cancel")
+                    }
+                }
+            )
         }
     } else {
         // --- ADD/EDIT ROUTE FORM VIEW ---
