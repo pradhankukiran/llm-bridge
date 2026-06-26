@@ -215,7 +215,7 @@ fun ProviderSettingsPane(
         androidx.activity.compose.BackHandler(enabled = true) { popForm() }
         
         var baseUrl by remember(configToEdit) { mutableStateOf(configToEdit?.baseUrl ?: "") }
-        var apiKey by remember(configToEdit) { mutableStateOf(configToEdit?.apiKey ?: "") }
+        var apiKey by remember(configToEdit) { mutableStateOf("") }
         var modelName by remember(configToEdit) { mutableStateOf(configToEdit?.modelName ?: "") }
 
         var systemPrompt by remember(configToEdit) { mutableStateOf(configToEdit?.systemPrompt ?: "") }
@@ -329,8 +329,8 @@ fun ProviderSettingsPane(
                     LlmInputField(
                         value = apiKey,
                         onValueChange = { apiKey = it },
-                        label = "API Key",
-                        placeholder = "Enter API key...",
+                        label = if (configToEdit != null) "Replace API Key" else "API Key",
+                        placeholder = if (configToEdit != null) "Stored key will be kept" else "Enter API key...",
                         visualTransformation = if (isKeyVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         trailingIcon = {
                             IconButton(onClick = { isKeyVisible = !isKeyVisible }) {
@@ -503,7 +503,7 @@ fun ProviderSettingsPane(
                             val savedConfig = base.copy(
                                 name = generatedName,
                                 baseUrl = baseUrl.trim(),
-                                apiKey = apiKey.trim(),
+                                apiKey = if (configToEdit != null && apiKey.isBlank()) base.apiKey else apiKey.trim(),
                                 modelName = modelName.trim(),
                                 apiType = apiType,
                                 maxTokens = maxTokVal,
