@@ -64,32 +64,37 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
     }
 
     if (showSettingsScreen) {
-        ProviderSettingsPane(
-            activeConfig = activeConfig,
-            configurations = configurations,
-            onSaveConfig = { config ->
-                viewModel.addOrUpdateConfiguration(config)
-            },
-            onSelectActiveConfig = { id ->
-                viewModel.selectActiveConfiguration(id)
-            },
-            onDeleteConfig = { id ->
-                showSettingsScreen = false
-                viewModel.deleteConfiguration(id) { snapshot ->
-                    scope.launch {
-                        val result = snackbarHostState.showSnackbar(
-                            message = "Route deleted",
-                            actionLabel = "Undo",
-                            duration = SnackbarDuration.Short
-                        )
-                        if (result == SnackbarResult.ActionPerformed) {
-                            viewModel.restoreDeletedConfiguration(snapshot)
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            ProviderSettingsPane(
+                activeConfig = activeConfig,
+                configurations = configurations,
+                onSaveConfig = { config ->
+                    viewModel.addOrUpdateConfiguration(config)
+                },
+                onSelectActiveConfig = { id ->
+                    viewModel.selectActiveConfiguration(id)
+                },
+                onDeleteConfig = { id ->
+                    showSettingsScreen = false
+                    viewModel.deleteConfiguration(id) { snapshot ->
+                        scope.launch {
+                            val result = snackbarHostState.showSnackbar(
+                                message = "Route deleted",
+                                actionLabel = "Undo",
+                                duration = SnackbarDuration.Short
+                            )
+                            if (result == SnackbarResult.ActionPerformed) {
+                                viewModel.restoreDeletedConfiguration(snapshot)
+                            }
                         }
                     }
-                }
-            },
-            onDismiss = { showSettingsScreen = false }
-        )
+                },
+                onDismiss = { showSettingsScreen = false }
+            )
+        }
         return
     }
 
