@@ -22,6 +22,7 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.*
@@ -113,7 +114,7 @@ fun ChatInterface(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Icon(
-                    imageVector = Icons.Default.Edit,
+                    imageVector = Icons.Default.Forum,
                     contentDescription = "Empty chat",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                     modifier = Modifier.size(48.dp)
