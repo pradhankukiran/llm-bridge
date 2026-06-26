@@ -28,6 +28,7 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Forum
@@ -391,6 +392,12 @@ fun ChatBubble(
     val hasHiddenThinkingOnly = !isUser &&
         parsedThinking?.hasThoughts == true &&
         parsedThinking.answer.isBlank()
+    val copyMessage = {
+        if (displayContent.isNotBlank()) {
+            clipboardManager.setText(AnnotatedString(displayContent))
+            Toast.makeText(context, "Message copied", Toast.LENGTH_SHORT).show()
+        }
+    }
     val bubbleShape = RoundedCornerShape(
         topStart = 18.dp,
         topEnd = 18.dp,
@@ -404,17 +411,13 @@ fun ChatBubble(
     ) {
         Box(
             modifier = Modifier
-                .fillMaxWidth(0.85f)
+                .fillMaxWidth(0.88f)
+                .widthIn(max = if (isUser) 560.dp else 720.dp)
                 .wrapContentWidth(align = if (isUser) Alignment.End else Alignment.Start)
                 .clip(bubbleShape)
                 .combinedClickable(
                     onClick = {},
-                    onLongClick = {
-                        if (displayContent.isNotBlank()) {
-                            clipboardManager.setText(AnnotatedString(displayContent))
-                            Toast.makeText(context, "Message copied", Toast.LENGTH_SHORT).show()
-                        }
-                    }
+                    onLongClick = copyMessage
                 )
                 .background(
                     if (isUser) {
@@ -513,6 +516,25 @@ fun ChatBubble(
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                     ) {
                         Text("Retry")
+                    }
+                }
+                if (!isUser && displayContent.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        IconButton(
+                            onClick = copyMessage,
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ContentCopy,
+                                contentDescription = "Copy message",
+                                tint = textColor.copy(alpha = 0.7f),
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
                     }
                 }
             }
