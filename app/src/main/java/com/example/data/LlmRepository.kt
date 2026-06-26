@@ -20,12 +20,37 @@ class LlmRepository(
     suspend fun getActiveConfigurationOneShot(): LlmConfiguration? =
         llmDao.getActiveConfigurationOneShot()?.let { decryptConfig(it) }
 
+    suspend fun getConfigurationSnapshot(id: Int): LlmConfiguration? =
+        llmDao.getAllConfigurationsOneShot().firstOrNull { it.id == id }?.let { decryptConfig(it) }
+
     suspend fun insertConfiguration(config: LlmConfiguration): Long {
         return llmDao.insertConfiguration(encryptConfig(config))
     }
 
     suspend fun deleteConfiguration(id: Int) {
         llmDao.deleteConfigurationAndMessages(id)
+    }
+
+    suspend fun getSessionsForConfigOneShot(configId: Int): List<ChatSession> {
+        return llmDao.getSessionsForConfigOneShot(configId)
+    }
+
+    suspend fun getMessagesForConfigOneShot(configId: Int): List<ChatMessage> {
+        return llmDao.getMessagesForConfigOneShot(configId)
+    }
+
+    suspend fun restoreConfigurationSnapshot(
+        config: LlmConfiguration,
+        sessions: List<ChatSession>,
+        messages: List<ChatMessage>
+    ) {
+        llmDao.insertConfiguration(encryptConfig(config))
+        if (sessions.isNotEmpty()) {
+            llmDao.insertSessions(sessions)
+        }
+        if (messages.isNotEmpty()) {
+            llmDao.insertMessages(messages)
+        }
     }
 
     suspend fun setActiveConfiguration(id: Int) {
@@ -38,6 +63,10 @@ class LlmRepository(
 
     suspend fun insertSession(session: ChatSession): Long {
         return llmDao.insertSession(session)
+    }
+
+    suspend fun getSessionById(sessionId: Int): ChatSession? {
+        return llmDao.getSessionById(sessionId)
     }
 
     suspend fun deleteSession(sessionId: Int) {
@@ -60,6 +89,19 @@ class LlmRepository(
         return llmDao.insertMessage(message)
     }
 
+    suspend fun restoreSessionSnapshot(session: ChatSession, messages: List<ChatMessage>) {
+        llmDao.insertSession(session)
+        if (messages.isNotEmpty()) {
+            llmDao.insertMessages(messages)
+        }
+    }
+
+    suspend fun restoreMessages(messages: List<ChatMessage>) {
+        if (messages.isNotEmpty()) {
+            llmDao.insertMessages(messages)
+        }
+    }
+
     suspend fun clearMessagesForSession(sessionId: Int) {
         llmDao.clearMessagesForSession(sessionId)
     }
@@ -70,6 +112,16 @@ class LlmRepository(
 
     suspend fun clearLogs() {
         llmDao.clearLogs()
+    }
+
+    suspend fun getAllLogsOneShot(): List<ApiLog> {
+        return llmDao.getAllLogsOneShot()
+    }
+
+    suspend fun restoreLogs(logs: List<ApiLog>) {
+        if (logs.isNotEmpty()) {
+            llmDao.insertLogs(logs)
+        }
     }
 
     suspend fun seedDefaultConfigurationsIfEmpty(configurationsList: List<LlmConfiguration>) {
