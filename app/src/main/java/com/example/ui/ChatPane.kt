@@ -121,15 +121,19 @@ fun ChatInterface(
                 )
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
-                    text = "No history under: ${activeConfig?.name ?: "Select an active route"}",
+                    text = if (activeConfig == null) {
+                        "Select and activate a route to start chatting."
+                    } else {
+                        "${activeConfig.name} has no messages yet."
+                    },
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
-                if (activeConfig == null) {
+                if (activeConfig != null) {
                     Text(
-                        text = "Please configure and activate a route first.",
+                        text = "Type a prompt below to begin a conversation.",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                         textAlign = TextAlign.Center,
