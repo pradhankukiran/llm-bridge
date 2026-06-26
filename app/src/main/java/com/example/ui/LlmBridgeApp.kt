@@ -46,7 +46,7 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
     val isWaitingForFirstChunk by viewModel.isWaitingForFirstChunk.collectAsStateWithLifecycle()
     val isSwitchingSession by viewModel.isSwitchingSession.collectAsStateWithLifecycle()
 
-    var showSettingsSheet by remember { mutableStateOf(false) }
+    var showSettingsScreen by remember { mutableStateOf(false) }
     var showLogsSheet by remember { mutableStateOf(false) }
     var renamingSession by remember { mutableStateOf<ChatSession?>(null) }
     var showClearChatConfirm by remember { mutableStateOf(false) }
@@ -55,6 +55,36 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+
+    if (showSettingsScreen) {
+        ProviderSettingsPane(
+            activeConfig = activeConfig,
+            configurations = configurations,
+            onSaveConfig = { config ->
+                viewModel.addOrUpdateConfiguration(config)
+            },
+            onSelectActiveConfig = { id ->
+                viewModel.selectActiveConfiguration(id)
+            },
+            onDeleteConfig = { id ->
+                showSettingsScreen = false
+                viewModel.deleteConfiguration(id) { snapshot ->
+                    scope.launch {
+                        val result = snackbarHostState.showSnackbar(
+                            message = "Route deleted",
+                            actionLabel = "Undo",
+                            duration = SnackbarDuration.Short
+                        )
+                        if (result == SnackbarResult.ActionPerformed) {
+                            viewModel.restoreDeletedConfiguration(snapshot)
+                        }
+                    }
+                }
+            },
+            onDismiss = { showSettingsScreen = false }
+        )
+        return
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -184,9 +214,10 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
                 HeaderBlock(
                     activeConfig = activeConfig,
                     onMenuClick = { scope.launch { drawerState.open() } },
-                    onSettingsClick = { showSettingsSheet = true },
+                    onSettingsClick = { showSettingsScreen = true },
                     onLogsClick = { showLogsSheet = true },
-                    onClearChat = { showClearChatConfirm = true }
+                    onClearChat = { showClearChatConfirm = true },
+                    onRouteClick = { showSettingsScreen = true }
                 )
             },
             snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -325,40 +356,6 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
         )
     }
 
-    if (showSettingsSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showSettingsSheet = false },
-            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-        ) {
-            ProviderSettingsPane(
-                activeConfig = activeConfig,
-                configurations = configurations,
-                onSaveConfig = { config ->
-                    viewModel.addOrUpdateConfiguration(config)
-                },
-                onSelectActiveConfig = { id -> 
-                    viewModel.selectActiveConfiguration(id)
-                },
-                onDeleteConfig = { id ->
-                    showSettingsSheet = false
-                    viewModel.deleteConfiguration(id) { snapshot ->
-                        scope.launch {
-                            val result = snackbarHostState.showSnackbar(
-                                message = "Route deleted",
-                                actionLabel = "Undo",
-                                duration = SnackbarDuration.Short
-                            )
-                            if (result == SnackbarResult.ActionPerformed) {
-                                viewModel.restoreDeletedConfiguration(snapshot)
-                            }
-                        }
-                    }
-                },
-                onDismiss = { showSettingsSheet = false }
-            )
-        }
-    }
-
     if (showLogsSheet) {
         ModalBottomSheet(
             onDismissRequest = { showLogsSheet = false },
@@ -393,8 +390,10 @@ fun HeaderBlock(
     onMenuClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onLogsClick: () -> Unit,
-    onClearChat: () -> Unit
+    onClearChat: () -> Unit,
+    onRouteClick: () -> Unit
 ) {
+    var menuExpanded by remember { mutableStateOf(false) }
     Column {
         TopAppBar(
             navigationIcon = {
@@ -418,72 +417,12 @@ fun HeaderBlock(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
                     )
-                    
-                    if (activeConfig != null) {
-                        val modelName = activeConfig.modelName.substringAfter("/")
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
-                            modifier = Modifier
-                                .height(28.dp)
-                                .padding(start = 4.dp)
-                                .weight(1f, fill = false)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                val infiniteTransition = rememberInfiniteTransition(label = "headerPulsing")
-                                val scale by infiniteTransition.animateFloat(
-                                    initialValue = 0.8f,
-                                    targetValue = 1.2f,
-                                    animationSpec = infiniteRepeatable(
-                                        animation = keyframes { durationMillis = 1000 },
-                                        repeatMode = RepeatMode.Reverse
-                                    ),
-                                    label = "scale"
-                                )
-                                Box(
-                                    modifier = Modifier
-                                        .graphicsLayer {
-                                            scaleX = scale
-                                            scaleY = scale
-                                        }
-                                        .size(6.dp)
-                                        .background(MaterialTheme.colorScheme.secondary, CircleShape)
-                                )
-                                Text(
-                                    text = modelName,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                        }
-                    }
                 }
             },
             actions = {
-                IconButton(onClick = onClearChat) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Clear Chat History",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                IconButton(onClick = onLogsClick) {
-                    Icon(
-                        imageVector = Icons.Default.BugReport,
-                        contentDescription = "Diagnostics Logs",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
                 IconButton(onClick = onSettingsClick) {
                     Icon(
                         imageVector = Icons.Default.Settings,
@@ -491,11 +430,121 @@ fun HeaderBlock(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+                Box {
+                    IconButton(onClick = { menuExpanded = true }) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "Conversation options",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Clear chat") },
+                            leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) },
+                            onClick = {
+                                menuExpanded = false
+                                onClearChat()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Diagnostics") },
+                            leadingIcon = { Icon(Icons.Default.BugReport, contentDescription = null) },
+                            onClick = {
+                                menuExpanded = false
+                                onLogsClick()
+                            }
+                        )
+                    }
+                }
             },
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainer
             )
         )
+        ActiveRouteStrip(
+            activeConfig = activeConfig,
+            onClick = onRouteClick
+        )
         HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+    }
+}
+
+@Composable
+private fun ActiveRouteStrip(
+    activeConfig: LlmConfiguration?,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 1.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 40.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            val config = activeConfig
+            if (config == null) {
+                Icon(
+                    imageVector = Icons.Default.Route,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(18.dp)
+                )
+                Text(
+                    text = "Select a route",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.SemiBold
+                )
+            } else {
+                val host = remember(config.baseUrl) {
+                    runCatching { java.net.URI(config.baseUrl).host }
+                        .getOrNull()
+                        ?.removePrefix("www.")
+                        ?: config.baseUrl.substringAfter("://").substringBefore("/")
+                }
+                Text(
+                    text = host.ifBlank { "Custom route" },
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = "·",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = config.modelName,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+                AssistChip(
+                    onClick = onClick,
+                    label = {
+                        Text(
+                            text = if (config.apiType == "ANTHROPIC") "Anthropic" else "OpenAI",
+                            maxLines = 1
+                        )
+                    }
+                )
+            }
+        }
     }
 }
