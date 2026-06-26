@@ -45,6 +45,7 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
     var showSettingsSheet by remember { mutableStateOf(false) }
     var showLogsSheet by remember { mutableStateOf(false) }
     var renamingSession by remember { mutableStateOf<ChatSession?>(null) }
+    var showClearChatConfirm by remember { mutableStateOf(false) }
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -178,7 +179,7 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
                     onMenuClick = { scope.launch { drawerState.open() } },
                     onSettingsClick = { showSettingsSheet = true },
                     onLogsClick = { showLogsSheet = true },
-                    onClearChat = { viewModel.clearChatHistory() }
+                    onClearChat = { showClearChatConfirm = true }
                 )
             },
             contentWindowInsets = WindowInsets(0, 0, 0, 0)
@@ -236,6 +237,30 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
     }
 
     // Modal Bottom Sheets
+    if (showClearChatConfirm) {
+        AlertDialog(
+            onDismissRequest = { showClearChatConfirm = false },
+            title = { Text("Clear chat history?") },
+            text = { Text("This removes every message in the current conversation. This cannot be undone.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.clearChatHistory()
+                        showClearChatConfirm = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Clear")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearChatConfirm = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
     if (showSettingsSheet) {
         ModalBottomSheet(
             onDismissRequest = { showSettingsSheet = false },
