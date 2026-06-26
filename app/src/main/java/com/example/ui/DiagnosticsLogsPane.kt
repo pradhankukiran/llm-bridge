@@ -40,7 +40,6 @@ fun DiagnosticsLogsPane(
         modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight(0.85f)
-            .navigationBarsPadding()
             .padding(horizontal = 20.dp)
     ) {
         Row(
