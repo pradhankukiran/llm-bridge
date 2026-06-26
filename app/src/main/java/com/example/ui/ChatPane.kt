@@ -9,6 +9,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -27,6 +28,8 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Stop
@@ -164,6 +167,7 @@ fun ChatInterface(
                     if (msg.role != "assistant" || msg.content.isNotEmpty()) {
                         ChatBubble(
                             message = msg,
+                            showThinkingTags = activeConfig?.reasoningMode == REASONING_MODE_SHOW_THINKING,
                             showRetry = msg == chatHistory.lastOrNull() && msg.isError && !isGenerating,
                             onRetry = onRetryLastMessage
                         )
@@ -354,12 +358,20 @@ fun ChatInterface(
 @Composable
 fun ChatBubble(
     message: ChatMessage,
+    showThinkingTags: Boolean = false,
     showRetry: Boolean = false,
     onRetry: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
     val isUser = message.role == "user"
+    val parsedThinking = remember(message.content, isUser) {
+        if (isUser) null else parseThinkingTagContent(message.content)
+    }
+    val displayContent = parsedThinking?.answer ?: message.content
+    val hasHiddenThinkingOnly = !isUser &&
+        parsedThinking?.hasThoughts == true &&
+        parsedThinking.answer.isBlank()
     val bubbleShape = RoundedCornerShape(
         topStart = 18.dp,
         topEnd = 18.dp,
@@ -379,8 +391,8 @@ fun ChatBubble(
                 .combinedClickable(
                     onClick = {},
                     onLongClick = {
-                        if (message.content.isNotBlank()) {
-                            clipboardManager.setText(AnnotatedString(message.content))
+                        if (displayContent.isNotBlank()) {
+                            clipboardManager.setText(AnnotatedString(displayContent))
                             Toast.makeText(context, "Message copied", Toast.LENGTH_SHORT).show()
                         }
                     }
@@ -423,16 +435,37 @@ fun ChatBubble(
                 .padding(vertical = 12.dp, horizontal = 16.dp)
         ) {
             Column {
-                MarkdownText(
-                    content = message.content,
-                    color = if (isUser) {
-                        MaterialTheme.colorScheme.onPrimary
-                    } else if (message.isError) {
-                        MaterialTheme.colorScheme.onErrorContainer
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
+                val textColor = if (isUser) {
+                    MaterialTheme.colorScheme.onPrimary
+                } else if (message.isError) {
+                    MaterialTheme.colorScheme.onErrorContainer
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                }
+
+                if (!isUser && parsedThinking?.hasThoughts == true && showThinkingTags) {
+                    ThinkingTagPanel(
+                        thoughts = parsedThinking.thoughts,
+                        isStreaming = parsedThinking.hasUnclosedThought,
+                        color = textColor
+                    )
+                    if (parsedThinking.answer.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(10.dp))
                     }
-                )
+                }
+
+                if (hasHiddenThinkingOnly && !showThinkingTags) {
+                    Text(
+                        text = "Thinking...",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else if (displayContent.isNotBlank()) {
+                    MarkdownText(
+                        content = displayContent,
+                        color = textColor
+                    )
+                }
                 if (isUser && message.mediaUri.isNotBlank()) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(
@@ -463,6 +496,53 @@ fun ChatBubble(
                         Text("Retry")
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ThinkingTagPanel(
+    thoughts: List<String>,
+    isStreaming: Boolean,
+    color: Color
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val title = if (isStreaming) "Thinking..." else "Thinking"
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.35f),
+        shape = RoundedCornerShape(10.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.18f))
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = !expanded },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = color.copy(alpha = 0.8f)
+                )
+                Icon(
+                    imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    contentDescription = if (expanded) "Hide thinking" else "Show thinking",
+                    tint = color.copy(alpha = 0.75f),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            if (expanded) {
+                Spacer(modifier = Modifier.height(8.dp))
+                MarkdownText(
+                    content = thoughts.joinToString("\n\n"),
+                    color = color.copy(alpha = 0.82f)
+                )
             }
         }
     }

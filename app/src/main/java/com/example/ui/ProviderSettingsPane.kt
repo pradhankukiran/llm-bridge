@@ -223,6 +223,9 @@ fun ProviderSettingsPane(
         var maxTokens by remember(configToEdit) { mutableStateOf(configToEdit?.maxTokens?.toString() ?: "4096") }
         var lastValidMaxTokens by remember(configToEdit) { mutableStateOf(configToEdit?.maxTokens ?: 4096) }
         var stream by remember(configToEdit) { mutableStateOf(configToEdit?.stream ?: true) }
+        var showThinkingTags by remember(configToEdit) {
+            mutableStateOf(configToEdit?.reasoningMode == REASONING_MODE_SHOW_THINKING)
+        }
         var saveAttempted by remember(configToEdit) { mutableStateOf(false) }
         var isSavingConfig by remember(configToEdit) { mutableStateOf(false) }
 
@@ -379,6 +382,34 @@ fun ProviderSettingsPane(
                             )
                         )
                     }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Show Thinking Tags",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "Display <think> blocks as collapsible reasoning panels.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                            )
+                        }
+                        Switch(
+                            checked = showThinkingTags,
+                            onCheckedChange = { showThinkingTags = it },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = MaterialTheme.colorScheme.primary,
+                                checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
+                            )
+                        )
+                    }
                 }
             }
 
@@ -509,6 +540,7 @@ fun ProviderSettingsPane(
                                 maxTokens = maxTokVal,
                                 temperature = temperature.toDouble(),
                                 stream = stream,
+                                reasoningMode = if (showThinkingTags) REASONING_MODE_SHOW_THINKING else "",
                                 systemPrompt = systemPrompt.trim()
                             )
                             onSaveConfig(savedConfig)
