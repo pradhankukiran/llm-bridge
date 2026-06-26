@@ -15,7 +15,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.BorderStroke
@@ -203,14 +202,14 @@ fun DiagnosticLogCard(log: ApiLog) {
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(if (isSuccess) Color(0xFF10B981).copy(alpha = 0.15f) else Color(0xFFEF4444).copy(alpha = 0.15f))
+                                .background(if (isSuccess) (if (dark) StatusGreenDark else StatusGreenLight).copy(alpha = 0.15f) else (if (dark) StatusRedDark else StatusRedLight).copy(alpha = 0.15f))
                                 .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {
                             Text(
                                 text = if (log.responseCode == -1) "FAIL" else "HTTP ${log.responseCode}",
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (isSuccess) Color(0xFF10B981) else Color(0xFFEF4444)
+                                color = if (isSuccess) (if (dark) StatusGreenDark else StatusGreenLight) else (if (dark) StatusRedDark else StatusRedLight)
                             )
                         }
                         
@@ -257,7 +256,7 @@ fun DiagnosticLogCard(log: ApiLog) {
                             text = "RESPONSE SNAPSHOT",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = if (isSuccess) MaterialTheme.colorScheme.secondary else Color(0xFFEF4444),
+                            color = if (isSuccess) MaterialTheme.colorScheme.secondary else (if (dark) StatusRedDark else StatusRedLight),
                             letterSpacing = 1.sp
                         )
                         Spacer(modifier = Modifier.height(4.dp))
