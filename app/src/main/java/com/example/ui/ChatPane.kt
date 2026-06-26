@@ -79,6 +79,7 @@ fun ChatInterface(
     var composerHeightPx by remember { mutableStateOf(0) }
     val messageListBottomPadding = with(density) { composerHeightPx.toDp() } + 16.dp
     val mediaSupported = activeConfig != null
+    val inputEnabled = activeConfig != null && !isGenerating
  
     val photoPickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         contract = androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia()
@@ -264,12 +265,21 @@ fun ChatInterface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(24.dp))
-                    .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), RoundedCornerShape(24.dp))
+                    .border(
+                        width = 1.dp,
+                        color = if (isGenerating) {
+                            MaterialTheme.colorScheme.error.copy(alpha = 0.45f)
+                        } else {
+                            MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                        },
+                        shape = RoundedCornerShape(24.dp)
+                    )
                     .padding(horizontal = 10.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (mediaSupported) {
                     IconButton(
+                        enabled = inputEnabled,
                         onClick = {
                             photoPickerLauncher.launch(
                                 androidx.activity.result.PickVisualMediaRequest(
@@ -281,7 +291,11 @@ fun ChatInterface(
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = "Attach Media",
-                            tint = MaterialTheme.colorScheme.primary,
+                            tint = if (inputEnabled) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                            },
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -294,6 +308,8 @@ fun ChatInterface(
                         Text(
                             text = if (activeConfig == null) {
                                 "Select a route to chat"
+                            } else if (isGenerating) {
+                                "Response in progress"
                             } else {
                                 "Chat with ${activeConfig.modelName.substringAfter("/")}..."
                             },
@@ -315,11 +331,11 @@ fun ChatInterface(
                     singleLine = false,
                     minLines = 1,
                     maxLines = 4,
-                    enabled = activeConfig != null,
+                    enabled = inputEnabled,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default),
                     keyboardActions = KeyboardActions(
                         onSend = {
-                            if (inputText.isNotBlank() && activeConfig != null) {
+                            if (inputText.isNotBlank() && inputEnabled) {
                                 onSendMessage(inputText, mediaUris, attachmentName.orEmpty(), mediaType)
                                 inputText = ""
                                 mediaUris = ""
@@ -342,7 +358,7 @@ fun ChatInterface(
                         )
                         .clickable(
                             enabled = if (isGenerating) true
-                                      else activeConfig != null && inputText.isNotBlank()
+                                      else inputEnabled && inputText.isNotBlank()
                         ) {
                             if (isGenerating) {
                                 onStopGeneration()
@@ -359,7 +375,7 @@ fun ChatInterface(
                         imageVector = if (isGenerating) Icons.Default.Stop else Icons.AutoMirrored.Filled.Send,
                         contentDescription = if (isGenerating) "Stop generation" else "Send Message",
                         tint = if (isGenerating) Color.White
-                               else if (activeConfig != null && inputText.isNotBlank()) Color.White
+                               else if (inputEnabled && inputText.isNotBlank()) Color.White
                                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                         modifier = Modifier.size(20.dp)
                     )
