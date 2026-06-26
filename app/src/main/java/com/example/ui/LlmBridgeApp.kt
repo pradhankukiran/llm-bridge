@@ -427,7 +427,10 @@ fun HeaderBlock(
                             shape = RoundedCornerShape(8.dp),
                             color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
                             border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
-                            modifier = Modifier.height(28.dp).padding(start = 4.dp)
+                            modifier = Modifier
+                                .height(28.dp)
+                                .padding(start = 4.dp)
+                                .weight(1f, fill = false)
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 8.dp),
