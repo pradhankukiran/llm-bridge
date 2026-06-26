@@ -1,5 +1,7 @@
 package com.example.ui
 
+import android.net.Uri
+import android.provider.OpenableColumns
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -33,6 +35,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
@@ -51,9 +54,11 @@ fun ChatInterface(
     activeConfig: LlmConfiguration?,
     chatHistory: List<ChatMessage>,
     isGenerating: Boolean,
+    isWaitingForFirstChunk: Boolean,
     onSendMessage: (String, String, String) -> Unit,
     onStopGeneration: () -> Unit = {}
 ) {
+    val context = LocalContext.current
     val keyboardController = LocalSoftwareKeyboardController.current
     var inputText by remember { mutableStateOf("") }
     var mediaUris by remember(activeConfig?.id) { mutableStateOf("") }
@@ -69,10 +74,14 @@ fun ChatInterface(
     }
 
     val listState = rememberLazyListState()
-    val showThinking = isGenerating && (chatHistory.isEmpty() || chatHistory.last().role != "assistant" || chatHistory.last().content.isEmpty())
-    val lastMessageContent = remember(chatHistory) { chatHistory.lastOrNull()?.content ?: "" }
+    val attachmentName = remember(mediaUris) {
+        mediaUris.takeIf { it.isNotBlank() }?.let { uriText ->
+            resolveDisplayName(context.contentResolver, Uri.parse(uriText)) ?: uriText.substringAfterLast("/")
+        }
+    }
+    val showThinking = isWaitingForFirstChunk
 
-    LaunchedEffect(chatHistory.size, showThinking, lastMessageContent) {
+    LaunchedEffect(chatHistory.size, showThinking) {
         val targetIndex = if (showThinking) chatHistory.size else chatHistory.size - 1
         if (targetIndex >= 0) {
             val layoutInfo = listState.layoutInfo
@@ -84,11 +93,7 @@ fun ChatInterface(
                 lastVisibleItem.index >= layoutInfo.totalItemsCount - 2
             }
             if (isAtBottom || chatHistory.lastOrNull()?.role == "user") {
-                if (isGenerating && chatHistory.lastOrNull()?.role == "assistant") {
-                    listState.scrollToItem(targetIndex)
-                } else {
-                    listState.animateScrollToItem(targetIndex)
-                }
+                listState.animateScrollToItem(targetIndex)
             }
         }
     }
@@ -204,7 +209,7 @@ fun ChatInterface(
                             modifier = Modifier.size(16.dp)
                         )
                         Text(
-                            text = "Attached media: ${mediaUris.substringAfterLast("/")}",
+                            text = "Attached media: $attachmentName",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
@@ -274,8 +279,8 @@ fun ChatInterface(
                         focusedTextColor = MaterialTheme.colorScheme.onSurface,
                         unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                     ),
-                    singleLine = false,
-                    maxLines = 4,
+                    singleLine = true,
+                    maxLines = 1,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                     keyboardActions = KeyboardActions(
                         onSend = {
@@ -503,6 +508,17 @@ fun TypingIndicatorBubble() {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+        }
+    }
+}
+
+private fun resolveDisplayName(contentResolver: android.content.ContentResolver, uri: Uri): String? {
+    return contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
+        if (cursor.moveToFirst()) {
+            val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+            if (index >= 0) cursor.getString(index) else null
+        } else {
+            null
         }
     }
 }

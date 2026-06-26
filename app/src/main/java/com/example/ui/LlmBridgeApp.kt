@@ -3,9 +3,11 @@ package com.example.ui
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -31,7 +33,7 @@ import com.example.data.LlmConfiguration
 import com.example.data.ChatSession
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun LlmBridgeApp(viewModel: LlmViewModel) {
     val isGenerating by viewModel.isGenerating.collectAsStateWithLifecycle()
@@ -41,6 +43,8 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
     val recentLogs by viewModel.recentLogs.collectAsStateWithLifecycle()
     val sessions by viewModel.sessions.collectAsStateWithLifecycle()
     val activeSession by viewModel.activeSession.collectAsStateWithLifecycle()
+    val isWaitingForFirstChunk by viewModel.isWaitingForFirstChunk.collectAsStateWithLifecycle()
+    val isSwitchingSession by viewModel.isSwitchingSession.collectAsStateWithLifecycle()
 
     var showSettingsSheet by remember { mutableStateOf(false) }
     var showLogsSheet by remember { mutableStateOf(false) }
@@ -49,6 +53,7 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
     var sessionPendingDelete by remember { mutableStateOf<ChatSession?>(null) }
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
     ModalNavigationDrawer(
@@ -100,10 +105,13 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(MaterialTheme.shapes.medium)
-                                    .clickable {
-                                        viewModel.selectSession(session.id)
-                                        scope.launch { drawerState.close() }
-                                    },
+                                    .combinedClickable(
+                                        onClick = {
+                                            viewModel.selectSession(session.id)
+                                            scope.launch { drawerState.close() }
+                                        },
+                                        onLongClick = { renamingSession = session }
+                                    ),
                                 color = if (isActive) MaterialTheme.colorScheme.secondaryContainer 
                                         else Color.Transparent
                             ) {
@@ -181,6 +189,7 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
                     onClearChat = { showClearChatConfirm = true }
                 )
             },
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             contentWindowInsets = WindowInsets(0, 0, 0, 0)
         ) { innerPadding ->
             Box(
@@ -193,9 +202,16 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
                     activeConfig = activeConfig,
                     chatHistory = chatHistory,
                     isGenerating = isGenerating,
+                    isWaitingForFirstChunk = isWaitingForFirstChunk,
                     onSendMessage = { text, mediaUris, mediaType -> viewModel.sendChatMessage(text, mediaUris, mediaType) },
                     onStopGeneration = { viewModel.stopGeneration() }
                 )
+                AnimatedVisibility(
+                    visible = isSwitchingSession,
+                    modifier = Modifier.align(Alignment.TopCenter)
+                ) {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                }
             }
         }
     }
@@ -241,11 +257,22 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
         AlertDialog(
             onDismissRequest = { showClearChatConfirm = false },
             title = { Text("Clear chat history?") },
-            text = { Text("This removes every message in the current conversation. This cannot be undone.") },
+            text = { Text("This removes every message in the current conversation. You can undo it briefly afterward.") },
             confirmButton = {
                 Button(
                     onClick = {
-                        viewModel.clearChatHistory()
+                        viewModel.clearChatHistory { deletedMessages ->
+                            scope.launch {
+                                val result = snackbarHostState.showSnackbar(
+                                    message = "Chat history cleared",
+                                    actionLabel = "Undo",
+                                    duration = SnackbarDuration.Short
+                                )
+                                if (result == SnackbarResult.ActionPerformed) {
+                                    viewModel.restoreMessages(deletedMessages)
+                                }
+                            }
+                        }
                         showClearChatConfirm = false
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
@@ -266,11 +293,22 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
         AlertDialog(
             onDismissRequest = { sessionPendingDelete = null },
             title = { Text("Delete conversation?") },
-            text = { Text("\"\u201C${pendingSessionDelete.title}\u201D and all its messages will be permanently deleted. This cannot be undone.") },
+            text = { Text("\"${pendingSessionDelete.title}\" and all its messages will be deleted. You can undo it briefly afterward.") },
             confirmButton = {
                 Button(
                     onClick = {
-                        viewModel.deleteSession(pendingSessionDelete.id)
+                        viewModel.deleteSession(pendingSessionDelete.id) { snapshot ->
+                            scope.launch {
+                                val result = snackbarHostState.showSnackbar(
+                                    message = "Conversation deleted",
+                                    actionLabel = "Undo",
+                                    duration = SnackbarDuration.Short
+                                )
+                                if (result == SnackbarResult.ActionPerformed) {
+                                    viewModel.restoreDeletedSession(snapshot)
+                                }
+                            }
+                        }
                         sessionPendingDelete = null
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
@@ -300,8 +338,19 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
                 onSelectActiveConfig = { id -> 
                     viewModel.selectActiveConfiguration(id)
                 },
-                onDeleteConfig = { id -> 
-                    viewModel.deleteConfiguration(id)
+                onDeleteConfig = { id ->
+                    viewModel.deleteConfiguration(id) { snapshot ->
+                        scope.launch {
+                            val result = snackbarHostState.showSnackbar(
+                                message = "Route deleted",
+                                actionLabel = "Undo",
+                                duration = SnackbarDuration.Short
+                            )
+                            if (result == SnackbarResult.ActionPerformed) {
+                                viewModel.restoreDeletedConfiguration(snapshot)
+                            }
+                        }
+                    }
                 },
                 onDismiss = { showSettingsSheet = false }
             )
@@ -315,7 +364,20 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
         ) {
             DiagnosticsLogsPane(
                 recentLogs = recentLogs,
-                onClearLogs = { viewModel.clearAllLogs() }
+                onClearLogs = {
+                    viewModel.clearAllLogs { deletedLogs ->
+                        scope.launch {
+                            val result = snackbarHostState.showSnackbar(
+                                message = "Diagnostics logs cleared",
+                                actionLabel = "Undo",
+                                duration = SnackbarDuration.Short
+                            )
+                            if (result == SnackbarResult.ActionPerformed) {
+                                viewModel.restoreLogs(deletedLogs)
+                            }
+                        }
+                    }
+                }
             )
         }
     }

@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Job
 import java.util.concurrent.TimeUnit
@@ -66,6 +67,23 @@ class LlmViewModel(
     val activeSessionId: StateFlow<Int?> = _activeSessionId.asStateFlow()
 
     private var generationJob: Job? = null
+
+    data class DeletedSessionSnapshot(
+        val session: ChatSession,
+        val messages: List<ChatMessage>
+    )
+
+    data class DeletedConfigurationSnapshot(
+        val configuration: LlmConfiguration,
+        val sessions: List<ChatSession>,
+        val messages: List<ChatMessage>
+    )
+
+    private val _isWaitingForFirstChunk = MutableStateFlow(false)
+    val isWaitingForFirstChunk: StateFlow<Boolean> = _isWaitingForFirstChunk.asStateFlow()
+
+    private val _isSwitchingSession = MutableStateFlow(false)
+    val isSwitchingSession: StateFlow<Boolean> = _isSwitchingSession.asStateFlow()
 
     init {
 
@@ -195,9 +213,25 @@ class LlmViewModel(
 
 
 
-    fun deleteConfiguration(id: Int) {
+    fun deleteConfiguration(id: Int, onDeleted: ((DeletedConfigurationSnapshot) -> Unit)? = null) {
         viewModelScope.launch {
+            val config = repository.getConfigurationSnapshot(id)
+            val sessions = repository.getSessionsForConfigOneShot(id)
+            val messages = repository.getMessagesForConfigOneShot(id)
             repository.deleteConfiguration(id)
+            if (config != null) {
+                onDeleted?.invoke(DeletedConfigurationSnapshot(config, sessions, messages))
+            }
+        }
+    }
+
+    fun restoreDeletedConfiguration(snapshot: DeletedConfigurationSnapshot) {
+        viewModelScope.launch {
+            repository.restoreConfigurationSnapshot(
+                snapshot.configuration,
+                snapshot.sessions,
+                snapshot.messages
+            )
         }
     }
 
@@ -210,12 +244,23 @@ class LlmViewModel(
     }
 
     fun selectSession(sessionId: Int) {
+        if (_activeSessionId.value == sessionId) return
         _activeSessionId.value = sessionId
+        viewModelScope.launch {
+            _isSwitchingSession.value = true
+            delay(250)
+            _isSwitchingSession.value = false
+        }
     }
 
-    fun deleteSession(sessionId: Int) {
+    fun deleteSession(sessionId: Int, onDeleted: ((DeletedSessionSnapshot) -> Unit)? = null) {
         viewModelScope.launch {
+            val session = repository.getSessionById(sessionId)
+            val messages = repository.getMessagesForSessionOneShot(sessionId)
             repository.deleteSession(sessionId)
+            if (session != null) {
+                onDeleted?.invoke(DeletedSessionSnapshot(session, messages))
+            }
             val config = activeConfig.value
             if (config != null) {
                 val sessList = repository.getSessionsForConfig(config.id).first()
@@ -226,6 +271,13 @@ class LlmViewModel(
                     _activeSessionId.value = sessList.first().id
                 }
             }
+        }
+    }
+
+    fun restoreDeletedSession(snapshot: DeletedSessionSnapshot) {
+        viewModelScope.launch {
+            repository.restoreSessionSnapshot(snapshot.session, snapshot.messages)
+            _activeSessionId.value = snapshot.session.id
         }
     }
 
@@ -265,92 +317,98 @@ class LlmViewModel(
             }
 
             _isGenerating.value = true
+            _isWaitingForFirstChunk.value = true
 
-            // 1. Save user message to DB
-            val userMsg = ChatMessage(sessionId = sessionToUse.id, role = "user", content = text)
-            repository.insertMessage(userMsg)
+            try {
+                // 1. Save user message to DB
+                val userMsg = ChatMessage(sessionId = sessionToUse.id, role = "user", content = text)
+                repository.insertMessage(userMsg)
 
-            // 2. Fetch history from DB (guaranteed to include userMsg) to feed the model
-            val dbHistory = repository.getMessagesForSessionOneShot(sessionToUse.id)
+                // 2. Fetch history from DB (guaranteed to include userMsg) to feed the model
+                val dbHistory = repository.getMessagesForSessionOneShot(sessionToUse.id)
 
-            val assistantResponseContent = java.lang.StringBuilder()
-            val tempAssistantMsg = ChatMessage(
-                sessionId = sessionToUse.id,
-                role = "assistant",
-                content = ""
-            )
+                val assistantResponseContent = java.lang.StringBuilder()
+                val tempAssistantMsg = ChatMessage(
+                    sessionId = sessionToUse.id,
+                    role = "assistant",
+                    content = ""
+                )
 
-            if (config.stream) {
-                _streamingMessage.value = tempAssistantMsg
-            }
-
-            // 3. Initiate API Call
-            val response = llmClient.executeChatCall(requestConfig, dbHistory) { chunk ->
                 if (config.stream) {
-                    assistantResponseContent.append(chunk)
-                    _streamingMessage.value = tempAssistantMsg.copy(content = assistantResponseContent.toString())
+                    _streamingMessage.value = tempAssistantMsg
                 }
-            }
 
-            // Clear streaming message
-            _streamingMessage.value = null
-
-            // 4. Save results & logs
-            when (response) {
-                is LlmResponse.Success -> {
-                    val assistantMsg = ChatMessage(
-                        sessionId = sessionToUse.id,
-                        role = "assistant",
-                        content = response.text
-                    )
-                    repository.insertMessage(assistantMsg)
-
-                    // Store details in Room logs
-                    repository.insertLog(
-                        ApiLog(
-                            endpointName = config.name,
-                            requestUrl = config.baseUrl,
-                            payloadSnippet = "Model: ${config.modelName}. Prompt: \"$text\"",
-                            resultSnippet = response.text.take(200),
-                            durationMs = response.durationMs,
-                            responseCode = 200
-                        )
-                    )
-                }
-                is LlmResponse.Error -> {
-                    val partial = assistantResponseContent.toString().trim()
-                    val errorBody = if (partial.isNotEmpty()) {
-                        "$partial\n\n_[stream interrupted: ${response.message}]_"
-                    } else {
-                        "Failure: ${response.message}"
+                // 3. Initiate API Call
+                val response = llmClient.executeChatCall(requestConfig, dbHistory) { chunk ->
+                    if (chunk.isNotEmpty()) {
+                        _isWaitingForFirstChunk.value = false
                     }
-                    val errorMsg = ChatMessage(
-                        sessionId = sessionToUse.id,
-                        role = "assistant",
-                        content = errorBody,
-                        isError = true
-                    )
-                    repository.insertMessage(errorMsg)
-
-                    // Store failure logs
-                    repository.insertLog(
-                        ApiLog(
-                            endpointName = config.name,
-                            requestUrl = config.baseUrl,
-                            payloadSnippet = "Model: ${config.modelName}. Prompt: \"$text\"",
-                            resultSnippet = response.rawResponse.take(300),
-                            durationMs = response.durationMs,
-                            responseCode = response.code
-                        )
-                    )
+                    if (config.stream) {
+                        assistantResponseContent.append(chunk)
+                        _streamingMessage.value = tempAssistantMsg.copy(content = assistantResponseContent.toString())
+                    }
                 }
-            }
 
-            _isGenerating.value = false
+                _isWaitingForFirstChunk.value = false
+                _streamingMessage.value = null
+
+                // 4. Save results & logs
+                when (response) {
+                    is LlmResponse.Success -> {
+                        val assistantMsg = ChatMessage(
+                            sessionId = sessionToUse.id,
+                            role = "assistant",
+                            content = response.text
+                        )
+                        repository.insertMessage(assistantMsg)
+
+                        // Store details in Room logs
+                        repository.insertLog(
+                            ApiLog(
+                                endpointName = config.name,
+                                requestUrl = config.baseUrl,
+                                payloadSnippet = "Model: ${config.modelName}. Prompt: \"$text\"",
+                                resultSnippet = response.text.take(200),
+                                durationMs = response.durationMs,
+                                responseCode = 200
+                            )
+                        )
+                    }
+                    is LlmResponse.Error -> {
+                        val partial = assistantResponseContent.toString().trim()
+                        val errorBody = if (partial.isNotEmpty()) {
+                            "$partial\n\n_[stream interrupted: ${response.message}]_"
+                        } else {
+                            "Failure: ${response.message}"
+                        }
+                        val errorMsg = ChatMessage(
+                            sessionId = sessionToUse.id,
+                            role = "assistant",
+                            content = errorBody,
+                            isError = true
+                        )
+                        repository.insertMessage(errorMsg)
+
+                        // Store failure logs
+                        repository.insertLog(
+                            ApiLog(
+                                endpointName = config.name,
+                                requestUrl = config.baseUrl,
+                                payloadSnippet = "Model: ${config.modelName}. Prompt: \"$text\"",
+                                resultSnippet = response.rawResponse.take(300),
+                                durationMs = response.durationMs,
+                                responseCode = response.code
+                            )
+                        )
+                    }
+                }
+            } finally {
+                _isGenerating.value = false
+                _isWaitingForFirstChunk.value = false
+                _streamingMessage.value = null
+            }
         }
         generationJob?.invokeOnCompletion {
-            _isGenerating.value = false
-            _streamingMessage.value = null
             generationJob = null
         }
     }
@@ -359,16 +417,36 @@ class LlmViewModel(
         generationJob?.cancel()
     }
 
-    fun clearChatHistory() {
+    fun clearChatHistory(onCleared: ((List<ChatMessage>) -> Unit)? = null) {
         val session = activeSession.value ?: return
         viewModelScope.launch {
+            val messages = repository.getMessagesForSessionOneShot(session.id)
             repository.clearMessagesForSession(session.id)
+            if (messages.isNotEmpty()) {
+                onCleared?.invoke(messages)
+            }
         }
     }
 
-    fun clearAllLogs() {
+    fun restoreMessages(messages: List<ChatMessage>) {
         viewModelScope.launch {
+            repository.restoreMessages(messages)
+        }
+    }
+
+    fun clearAllLogs(onCleared: ((List<ApiLog>) -> Unit)? = null) {
+        viewModelScope.launch {
+            val logs = repository.getAllLogsOneShot()
             repository.clearLogs()
+            if (logs.isNotEmpty()) {
+                onCleared?.invoke(logs)
+            }
+        }
+    }
+
+    fun restoreLogs(logs: List<ApiLog>) {
+        viewModelScope.launch {
+            repository.restoreLogs(logs)
         }
     }
 
