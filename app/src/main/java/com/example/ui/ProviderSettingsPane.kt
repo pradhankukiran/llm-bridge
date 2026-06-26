@@ -187,7 +187,7 @@ fun ProviderSettingsPane(
         
         var isKeyVisible by remember { mutableStateOf(false) }
 
-        val apiType = if (baseUrl.contains("anthropic.com")) "ANTHROPIC" else "OPENAI"
+        var apiType by remember { mutableStateOf(configToEdit?.apiType ?: "OPENAI") }
         val generatedName = remember(baseUrl, modelName) {
             val domain = try {
                 val uri = java.net.URI(baseUrl)
@@ -249,11 +249,36 @@ fun ProviderSettingsPane(
                         letterSpacing = 1.sp
                     )
 
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(
+                            text = "API Protocol",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                            SegmentedButton(
+                                selected = apiType == "OPENAI",
+                                onClick = { apiType = "OPENAI" },
+                                shape = SegmentedButtonDefaults.itemShape(index = 0)
+                            ) {
+                                Text("OpenAI-compatible", fontSize = 12.sp)
+                            }
+                            SegmentedButton(
+                                selected = apiType == "ANTHROPIC",
+                                onClick = { apiType = "ANTHROPIC" },
+                                shape = SegmentedButtonDefaults.itemShape(index = 1)
+                            ) {
+                                Text("Anthropic Messages", fontSize = 12.sp)
+                            }
+                        }
+                    }
+
                     LlmInputField(
                         value = baseUrl,
                         onValueChange = { baseUrl = it },
                         label = "API Base URL",
-                        placeholder = "https://api.openai.com/v1"
+                        placeholder = if (apiType == "ANTHROPIC") "https://api.anthropic.com/v1" else "https://api.openai.com/v1"
                     )
 
                     LlmInputField(
