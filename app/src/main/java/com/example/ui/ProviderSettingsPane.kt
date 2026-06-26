@@ -201,6 +201,15 @@ fun ProviderSettingsPane(
     } else {
         // --- ADD/EDIT ROUTE FORM VIEW ---
         val configToEdit = editingConfig
+        val popForm = {
+            if (configurations.isEmpty()) {
+                onDismiss()
+            } else {
+                editingConfig = null
+                isAddingNew = false
+            }
+        }
+        androidx.activity.compose.BackHandler(enabled = true) { popForm() }
         
         var baseUrl by remember(configToEdit) { mutableStateOf(configToEdit?.baseUrl ?: "") }
         var apiKey by remember(configToEdit) { mutableStateOf(configToEdit?.apiKey ?: "") }
@@ -237,14 +246,7 @@ fun ProviderSettingsPane(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                IconButton(onClick = { 
-                    if (configurations.isEmpty()) {
-                        onDismiss()
-                    } else {
-                        editingConfig = null
-                        isAddingNew = false
-                    }
-                }) {
+                IconButton(onClick = popForm) {
                     Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
                 }
                 Spacer(modifier = Modifier.width(8.dp))
@@ -286,14 +288,14 @@ fun ProviderSettingsPane(
                             SegmentedButton(
                                 selected = apiType == "OPENAI",
                                 onClick = { apiType = "OPENAI" },
-                                shape = SegmentedButtonDefaults.itemShape(index = 0)
+                                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
                             ) {
                                 Text("OpenAI-compatible", fontSize = 12.sp)
                             }
                             SegmentedButton(
                                 selected = apiType == "ANTHROPIC",
                                 onClick = { apiType = "ANTHROPIC" },
-                                shape = SegmentedButtonDefaults.itemShape(index = 1)
+                                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
                             ) {
                                 Text("Anthropic Messages", fontSize = 12.sp)
                             }
@@ -443,14 +445,7 @@ fun ProviderSettingsPane(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 OutlinedButton(
-                    onClick = { 
-                        if (configurations.isEmpty()) {
-                            onDismiss()
-                        } else {
-                            editingConfig = null
-                            isAddingNew = configurations.isEmpty()
-                        }
-                    },
+                    onClick = popForm,
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp)
                 ) {
