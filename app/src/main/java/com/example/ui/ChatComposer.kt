@@ -240,7 +240,7 @@ private fun ComposerInputRow(
                     } else if (isGenerating) {
                         "Response in progress"
                     } else {
-                        "Chat with ${activeConfig.modelName.substringAfter("/")}..."
+                        "Start chatting..."
                     },
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                 )

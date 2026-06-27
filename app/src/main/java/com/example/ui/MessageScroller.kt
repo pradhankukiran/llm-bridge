@@ -68,7 +68,7 @@ fun EmptyConversation(activeConfig: LlmConfiguration?) {
             text = if (activeConfig == null) {
                 "Select and activate a route to start chatting."
             } else {
-                "${activeConfig.name} has no messages yet."
+                "No messages yet."
             },
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
@@ -77,7 +77,7 @@ fun EmptyConversation(activeConfig: LlmConfiguration?) {
         )
         if (activeConfig != null) {
             Text(
-                text = "Type a prompt below to begin a conversation.",
+                text = "Start a new conversation below.",
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                 textAlign = TextAlign.Center,
