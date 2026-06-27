@@ -52,11 +52,14 @@ import com.example.data.ChatMessage
 import com.example.data.LlmConfiguration
 
 @Composable
-fun EmptyConversation(activeConfig: LlmConfiguration?) {
+fun EmptyConversation(
+    activeConfig: LlmConfiguration?,
+    bottomPadding: Dp = 0.dp
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = bottomPadding),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {

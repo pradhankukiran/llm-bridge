@@ -39,7 +39,10 @@ fun ChatInterface(
             .background(MaterialTheme.colorScheme.background)
     ) {
         if (chatHistory.isEmpty()) {
-            EmptyConversation(activeConfig = activeConfig)
+            EmptyConversation(
+                activeConfig = activeConfig,
+                bottomPadding = messageListBottomPadding
+            )
         } else {
             MessageScroller(
                 activeConfig = activeConfig,
