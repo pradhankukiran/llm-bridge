@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AttachFile
@@ -84,9 +83,7 @@ fun MessageBubble(
     ) {
         Box(
             modifier = Modifier
-                .fillMaxWidth(0.88f)
                 .widthIn(max = if (isUser) 560.dp else 720.dp)
-                .wrapContentWidth(align = if (isUser) Alignment.End else Alignment.Start)
                 .clip(bubbleShape)
                 .combinedClickable(
                     onClick = {},
