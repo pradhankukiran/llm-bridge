@@ -1,6 +1,7 @@
 package com.example.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -72,6 +73,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.LlmConfiguration
@@ -256,82 +258,56 @@ private fun RouteCard(
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
-    Card(
+    val rowShape = RoundedCornerShape(8.dp)
+
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
             .combinedClickable(
                 onClick = onSelect,
                 onLongClick = onEdit
             ),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isActive) {
-                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f)
-            } else {
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
-            }
-        ),
+        color = Color.Transparent,
         border = if (isActive) {
-            BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)
+            BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
         } else {
-            BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+            BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.12f))
         },
-        shape = RoundedCornerShape(12.dp)
+        shape = rowShape
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .background(
+                    if (isActive) {
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.04f)
+                    } else {
+                        Color.Transparent
+                    },
+                    rowShape
+                )
+                .padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = config.name,
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isActive) {
-                            MaterialTheme.colorScheme.onPrimaryContainer
-                        } else {
-                            MaterialTheme.colorScheme.onSurface
-                        }
-                    )
-                    Surface(
-                        color = if (config.apiType == "ANTHROPIC") {
-                            MaterialTheme.colorScheme.tertiaryContainer
-                        } else {
-                            MaterialTheme.colorScheme.primaryContainer
-                        },
-                        shape = RoundedCornerShape(4.dp)
-                    ) {
-                        Text(
-                            text = config.apiType,
-                            style = MaterialTheme.typography.labelSmall,
-                            fontSize = 9.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
-                            color = if (config.apiType == "ANTHROPIC") {
-                                MaterialTheme.colorScheme.onTertiaryContainer
-                            } else {
-                                MaterialTheme.colorScheme.onPrimaryContainer
-                            }
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(4.dp))
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
                 Text(
-                    text = "Base URL: ${config.baseUrl.take(40)}${if (config.baseUrl.length > 40) "..." else ""}",
+                    text = config.baseUrl,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "Model: ${config.modelName}",
-                    style = MaterialTheme.typography.bodySmall,
+                    text = config.modelName,
+                    style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
 
