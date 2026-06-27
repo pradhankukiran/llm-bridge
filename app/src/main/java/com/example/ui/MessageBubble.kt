@@ -155,6 +155,7 @@ fun MessageBubble(
 
                 if (!isUser && displayContent.isNotBlank()) {
                     MessageActions(
+                        modifier = Modifier.align(Alignment.End),
                         textColor = textColor,
                         onCopy = copyMessage
                     )
@@ -200,17 +201,18 @@ private fun MessageAttachment(
 
 @Composable
 private fun MessageActions(
+    modifier: Modifier = Modifier,
     textColor: Color,
     onCopy: () -> Unit
 ) {
-    Spacer(modifier = Modifier.height(6.dp))
+    Spacer(modifier = Modifier.height(4.dp))
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier,
         horizontalArrangement = Arrangement.End
     ) {
         IconButton(
             onClick = onCopy,
-            modifier = Modifier.size(36.dp)
+            modifier = Modifier.size(32.dp)
         ) {
             Icon(
                 imageVector = Icons.Default.ContentCopy,
