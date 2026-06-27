@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- App Launcher Icon Colors (Dark Theme Overrides) -->
+    <!-- App icon and Android 12+ splash colors. -->
     <color name="ic_launcher_background">#09090C</color>
-    <color name="ic_launcher_bubble_left">#7C4DFF</color>
-    <color name="ic_launcher_bubble_right">#B388FF</color>
-    <color name="ic_launcher_connector">#E0E0E0</color>
+    <color name="ic_launcher_foreground">#C4B5FD</color>
+    <color name="ic_launcher_monochrome">#FFFFFFFF</color>
+    <color name="splash_screen_background">#09090C</color>
 </resources>

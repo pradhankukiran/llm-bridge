@@ -13,42 +13,42 @@
             android:fillColor="@android:color/transparent"
             android:pathData="M12,6V2H8"
             android:strokeWidth="2"
-            android:strokeColor="@color/ic_launcher_foreground"
+            android:strokeColor="@color/ic_launcher_monochrome"
             android:strokeLineCap="round"
             android:strokeLineJoin="round" />
         <path
             android:fillColor="@android:color/transparent"
             android:pathData="M15,11v2"
             android:strokeWidth="2"
-            android:strokeColor="@color/ic_launcher_foreground"
+            android:strokeColor="@color/ic_launcher_monochrome"
             android:strokeLineCap="round"
             android:strokeLineJoin="round" />
         <path
             android:fillColor="@android:color/transparent"
             android:pathData="M2,12h2"
             android:strokeWidth="2"
-            android:strokeColor="@color/ic_launcher_foreground"
+            android:strokeColor="@color/ic_launcher_monochrome"
             android:strokeLineCap="round"
             android:strokeLineJoin="round" />
         <path
             android:fillColor="@android:color/transparent"
             android:pathData="M20,12h2"
             android:strokeWidth="2"
-            android:strokeColor="@color/ic_launcher_foreground"
+            android:strokeColor="@color/ic_launcher_monochrome"
             android:strokeLineCap="round"
             android:strokeLineJoin="round" />
         <path
             android:fillColor="@android:color/transparent"
             android:pathData="M20,16a2,2 0,0 1,-2 2H8.828a2,2 0,0 0,-1.414 0.586l-2.202,2.202A0.71,0.71 0,0 1,4 20.286V8a2,2 0,0 1,2 -2h12a2,2 0,0 1,2 2z"
             android:strokeWidth="2"
-            android:strokeColor="@color/ic_launcher_foreground"
+            android:strokeColor="@color/ic_launcher_monochrome"
             android:strokeLineCap="round"
             android:strokeLineJoin="round" />
         <path
             android:fillColor="@android:color/transparent"
             android:pathData="M9,11v2"
             android:strokeWidth="2"
-            android:strokeColor="@color/ic_launcher_foreground"
+            android:strokeColor="@color/ic_launcher_monochrome"
             android:strokeLineCap="round"
             android:strokeLineJoin="round" />
     </group>

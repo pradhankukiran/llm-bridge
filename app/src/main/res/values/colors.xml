@@ -8,9 +8,9 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <!-- App Launcher Icon Colors (Light Theme Defaults) -->
-    <color name="ic_launcher_background">#FFFFFF</color>
-    <color name="ic_launcher_bubble_left">#7C4DFF</color>
-    <color name="ic_launcher_bubble_right">#B388FF</color>
-    <color name="ic_launcher_connector">#6B7280</color>
+    <!-- App icon and Android 12+ splash colors. -->
+    <color name="ic_launcher_background">#F8FAFC</color>
+    <color name="ic_launcher_foreground">#4F46E5</color>
+    <color name="ic_launcher_monochrome">#FFFFFFFF</color>
+    <color name="splash_screen_background">#F8FAFC</color>
 </resources>
