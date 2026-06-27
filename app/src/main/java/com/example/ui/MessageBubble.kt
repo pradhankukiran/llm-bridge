@@ -37,7 +37,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
@@ -89,13 +88,13 @@ fun MessageBubble(
                     onClick = {},
                     onLongClick = copyMessage
                 )
-                .background(messageBubbleBrush(isUser = isUser, isError = message.isError))
+                .background(messageBubbleColor(isUser = isUser, isError = message.isError))
                 .border(
                     width = 1.dp,
                     color = if (message.isError) {
-                        MaterialTheme.colorScheme.error
+                        MaterialTheme.colorScheme.error.copy(alpha = 0.35f)
                     } else if (!isUser) {
-                        MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
+                        MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
                     } else {
                         Color.Transparent
                     },
@@ -105,7 +104,7 @@ fun MessageBubble(
         ) {
             Column {
                 val textColor = if (isUser) {
-                    MaterialTheme.colorScheme.onPrimary
+                    MaterialTheme.colorScheme.onPrimaryContainer
                 } else if (message.isError) {
                     MaterialTheme.colorScheme.onErrorContainer
                 } else {
@@ -140,7 +139,7 @@ fun MessageBubble(
                     Spacer(modifier = Modifier.height(8.dp))
                     MessageAttachment(
                         displayName = message.mediaDisplayName.ifBlank { message.mediaUri.substringAfterLast("/") },
-                        tint = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f)
                     )
                 }
 
@@ -166,26 +165,11 @@ fun MessageBubble(
 }
 
 @Composable
-private fun messageBubbleBrush(isUser: Boolean, isError: Boolean): Brush {
+private fun messageBubbleColor(isUser: Boolean, isError: Boolean): Color {
     return when {
-        isUser -> Brush.linearGradient(
-            listOf(
-                MaterialTheme.colorScheme.primary,
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
-            )
-        )
-        isError -> Brush.linearGradient(
-            listOf(
-                MaterialTheme.colorScheme.errorContainer,
-                MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.9f)
-            )
-        )
-        else -> Brush.linearGradient(
-            listOf(
-                MaterialTheme.colorScheme.surfaceVariant,
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f)
-            )
-        )
+        isUser -> MaterialTheme.colorScheme.primaryContainer
+        isError -> MaterialTheme.colorScheme.errorContainer
+        else -> MaterialTheme.colorScheme.surfaceContainerHigh
     }
 }
 
