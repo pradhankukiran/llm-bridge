@@ -241,7 +241,14 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
                     onRouteClick = { runWhenIdle { showSettingsScreen = true } }
                 )
             },
-            snackbarHost = { SnackbarHost(snackbarHostState) },
+            snackbarHost = {
+                SnackbarHost(
+                    hostState = snackbarHostState,
+                    modifier = Modifier
+                        .navigationBarsPadding()
+                        .padding(horizontal = 16.dp, bottom = 8.dp)
+                )
+            },
             contentWindowInsets = WindowInsets(0, 0, 0, 0)
         ) { innerPadding ->
             Box(
@@ -259,6 +266,14 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
                         viewModel.sendChatMessage(text, mediaUris, mediaDisplayName, mediaType)
                     },
                     onRetryLastMessage = { viewModel.retryLastUserMessage() },
+                    onMessageCopied = {
+                        scope.launch {
+                            snackbarHostState.showSnackbar(
+                                message = "Message copied",
+                                duration = SnackbarDuration.Short
+                            )
+                        }
+                    },
                     onStopGeneration = { viewModel.stopGeneration() }
                 )
                 AnimatedVisibility(

@@ -24,6 +24,7 @@ fun ChatInterface(
     isWaitingForFirstChunk: Boolean,
     onSendMessage: (String, String, String, String) -> Unit,
     onRetryLastMessage: () -> Unit,
+    onMessageCopied: () -> Unit,
     onStopGeneration: () -> Unit = {}
 ) {
     val density = LocalDensity.current
@@ -44,7 +45,8 @@ fun ChatInterface(
                 bottomPadding = messageListBottomPadding,
                 showTypingMarker = isWaitingForFirstChunk,
                 isGenerating = isGenerating,
-                onRetryLastMessage = onRetryLastMessage
+                onRetryLastMessage = onRetryLastMessage,
+                onMessageCopied = onMessageCopied
             )
         }
 

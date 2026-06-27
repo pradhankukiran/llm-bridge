@@ -94,7 +94,8 @@ fun MessageScroller(
     bottomPadding: Dp,
     showTypingMarker: Boolean,
     isGenerating: Boolean,
-    onRetryLastMessage: () -> Unit
+    onRetryLastMessage: () -> Unit,
+    onMessageCopied: () -> Unit
 ) {
     val listState = rememberLazyListState()
 
@@ -143,7 +144,8 @@ fun MessageScroller(
                     message = message,
                     showThinkingTags = activeConfig?.reasoningMode == REASONING_MODE_SHOW_THINKING,
                     showRetry = message == messages.lastOrNull() && message.isError && !isGenerating,
-                    onRetry = onRetryLastMessage
+                    onRetry = onRetryLastMessage,
+                    onMessageCopied = onMessageCopied
                 )
             }
         }

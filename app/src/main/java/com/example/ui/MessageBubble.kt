@@ -1,6 +1,5 @@
 package com.example.ui
 
-import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -42,7 +41,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -55,9 +53,9 @@ fun MessageBubble(
     message: ChatMessage,
     showThinkingTags: Boolean = false,
     showRetry: Boolean = false,
-    onRetry: () -> Unit = {}
+    onRetry: () -> Unit = {},
+    onMessageCopied: () -> Unit = {}
 ) {
-    val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
     val isUser = message.role == "user"
     val parsedThinking = remember(message.content, isUser) {
@@ -70,7 +68,7 @@ fun MessageBubble(
     val copyMessage = {
         if (displayContent.isNotBlank()) {
             clipboardManager.setText(AnnotatedString(displayContent))
-            Toast.makeText(context, "Message copied", Toast.LENGTH_SHORT).show()
+            onMessageCopied()
         }
     }
     val bubbleShape = RoundedCornerShape(
