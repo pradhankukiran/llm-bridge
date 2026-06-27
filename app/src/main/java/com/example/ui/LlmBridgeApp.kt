@@ -438,7 +438,7 @@ fun HeaderBlock(
                 ) {
                     Text(
                         text = "LLM Bridge",
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
