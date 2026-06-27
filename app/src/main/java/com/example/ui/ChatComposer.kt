@@ -97,6 +97,7 @@ fun ChatComposer(
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .testTag("chat_composer")
             .background(
                 Brush.verticalGradient(
                     colors = listOf(

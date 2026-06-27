@@ -12,6 +12,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.example.data.ChatMessage
 import com.example.data.LlmConfiguration
@@ -34,6 +35,7 @@ fun ChatInterface(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .testTag("chat_surface")
             .background(MaterialTheme.colorScheme.background)
     ) {
         if (chatHistory.isEmpty()) {
