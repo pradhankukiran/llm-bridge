@@ -358,6 +358,7 @@ class LlmViewModel(
                     role = "assistant",
                     content = ""
                 )
+                val streamingGate = StreamingUpdateGate()
 
                 if (config.stream) {
                     _streamingMessage.value = tempAssistantMsg
@@ -370,10 +371,15 @@ class LlmViewModel(
                     }
                     if (config.stream) {
                         assistantResponseContent.append(chunk)
-                        _streamingMessage.value = tempAssistantMsg.copy(content = assistantResponseContent.toString())
+                        if (streamingGate.shouldPublish(assistantResponseContent.length)) {
+                            _streamingMessage.value = tempAssistantMsg.copy(content = assistantResponseContent.toString())
+                        }
                     }
                 }
 
+                if (config.stream && streamingGate.shouldPublish(assistantResponseContent.length, force = true)) {
+                    _streamingMessage.value = tempAssistantMsg.copy(content = assistantResponseContent.toString())
+                }
                 _isWaitingForFirstChunk.value = false
                 _streamingMessage.value = null
 
