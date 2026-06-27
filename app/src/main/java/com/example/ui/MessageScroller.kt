@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -99,20 +100,19 @@ fun MessageScroller(
 ) {
     val listState = rememberLazyListState()
 
-    LaunchedEffect(messages.size, showTypingMarker, messages.lastOrNull()?.content) {
+    LaunchedEffect(messages.size, showTypingMarker) {
         val targetIndex = if (showTypingMarker) messages.size else messages.size - 1
         if (targetIndex >= 0) {
-            val layoutInfo = listState.layoutInfo
-            val visibleItems = layoutInfo.visibleItemsInfo
-            val isAtBottom = if (visibleItems.isEmpty()) {
-                true
-            } else {
-                val lastVisibleItem = visibleItems.last()
-                lastVisibleItem.index >= layoutInfo.totalItemsCount - 2
-            }
-            if (isAtBottom || messages.lastOrNull()?.role == "user") {
+            if (listState.isNearConversationBottom() || messages.lastOrNull()?.role == "user") {
                 listState.animateScrollToItem(targetIndex)
             }
+        }
+    }
+
+    LaunchedEffect(messages.lastOrNull()?.content) {
+        if (messages.isNotEmpty() && listState.isNearConversationBottom()) {
+            val targetIndex = if (showTypingMarker) messages.size else messages.lastIndex
+            listState.scrollToItem(targetIndex)
         }
     }
 
@@ -160,6 +160,15 @@ fun MessageScroller(
 private fun chatMessageKey(message: ChatMessage): String {
     if (message.id != 0) return "message-${message.id}"
     return "pending-${message.sessionId}-${message.role}-${message.timestamp}"
+}
+
+private fun LazyListState.isNearConversationBottom(): Boolean {
+    val currentLayout = layoutInfo
+    val visibleItems = currentLayout.visibleItemsInfo
+    if (visibleItems.isEmpty()) return true
+
+    val lastVisibleItem = visibleItems.last()
+    return lastVisibleItem.index >= currentLayout.totalItemsCount - 2
 }
 
 @Composable
