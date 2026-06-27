@@ -76,6 +76,7 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
                 },
                 onSelectActiveConfig = { id ->
                     viewModel.selectActiveConfiguration(id)
+                    showSettingsScreen = false
                 },
                 onDeleteConfig = { id ->
                     showSettingsScreen = false
