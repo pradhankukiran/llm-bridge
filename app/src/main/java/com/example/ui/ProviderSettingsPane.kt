@@ -2,7 +2,6 @@ package com.example.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -33,6 +32,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
@@ -258,69 +258,82 @@ private fun RouteCard(
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
-    val rowShape = RoundedCornerShape(8.dp)
-
     Surface(
         modifier = Modifier
             .fillMaxWidth()
+            .clip(MaterialTheme.shapes.medium)
             .combinedClickable(
                 onClick = onSelect,
                 onLongClick = onEdit
             ),
-        color = Color.Transparent,
-        border = if (isActive) {
-            BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
-        } else {
-            BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.12f))
-        },
-        shape = rowShape
+        color = if (isActive) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(
-                    if (isActive) {
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.04f)
-                    } else {
-                        Color.Transparent
-                    },
-                    rowShape
-                )
-                .padding(horizontal = 12.dp, vertical = 10.dp),
+                .padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(
+            Row(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(
-                    text = config.baseUrl,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                Icon(
+                    imageVector = Icons.Default.Route,
+                    contentDescription = "Route",
+                    tint = if (isActive) {
+                        MaterialTheme.colorScheme.onPrimaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                    modifier = Modifier.size(18.dp)
                 )
-                Text(
-                    text = config.modelName,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Text(
+                        text = config.modelName,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = if (isActive) FontWeight.Bold else FontWeight.SemiBold,
+                        color = if (isActive) {
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        },
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = config.baseUrl,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (isActive) {
+                            MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f)
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                horizontalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 IconButton(onClick = onEdit) {
                     Icon(
                         imageVector = Icons.Default.Edit,
                         contentDescription = "Edit Route",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
+                        tint = if (isActive) {
+                            MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f)
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        },
+                        modifier = Modifier.size(18.dp)
                     )
                 }
                 if (canDelete) {
@@ -329,7 +342,7 @@ private fun RouteCard(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Delete Route",
                             tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 }
