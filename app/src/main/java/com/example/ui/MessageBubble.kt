@@ -50,6 +50,7 @@ import com.example.data.ChatMessage
 fun MessageBubble(
     message: ChatMessage,
     showThinkingTags: Boolean = false,
+    isStreaming: Boolean = false,
     showRetry: Boolean = false,
     onRetry: () -> Unit = {},
     onMessageCopied: () -> Unit = {}
@@ -131,7 +132,8 @@ fun MessageBubble(
                 } else if (displayContent.isNotBlank()) {
                     MarkdownText(
                         content = displayContent,
-                        color = textColor
+                        color = textColor,
+                        isStreaming = isStreaming
                     )
                 }
 
@@ -153,7 +155,7 @@ fun MessageBubble(
                     }
                 }
 
-                if (!isUser && displayContent.isNotBlank()) {
+                if (!isUser && !isStreaming && displayContent.isNotBlank()) {
                     MessageActions(
                         modifier = Modifier.align(Alignment.End),
                         textColor = textColor,

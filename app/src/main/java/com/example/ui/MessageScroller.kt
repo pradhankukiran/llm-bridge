@@ -37,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -111,6 +112,7 @@ fun MessageScroller(
 
     LaunchedEffect(messages.lastOrNull()?.content) {
         if (messages.isNotEmpty() && listState.isNearConversationBottom()) {
+            withFrameNanos { }
             val targetIndex = if (showTypingMarker) messages.size else messages.lastIndex
             listState.scrollToItem(targetIndex)
         }
@@ -143,6 +145,7 @@ fun MessageScroller(
                 MessageBubble(
                     message = message,
                     showThinkingTags = activeConfig?.reasoningMode == REASONING_MODE_SHOW_THINKING,
+                    isStreaming = message.isStreamingAssistant(isGenerating),
                     showRetry = message == messages.lastOrNull() && message.isError && !isGenerating,
                     onRetry = onRetryLastMessage,
                     onMessageCopied = onMessageCopied
@@ -160,6 +163,10 @@ fun MessageScroller(
 private fun chatMessageKey(message: ChatMessage): String {
     if (message.id != 0) return "message-${message.id}"
     return "pending-${message.sessionId}-${message.role}-${message.timestamp}"
+}
+
+private fun ChatMessage.isStreamingAssistant(isGenerating: Boolean): Boolean {
+    return isGenerating && id == 0 && role == "assistant"
 }
 
 private fun LazyListState.isNearConversationBottom(): Boolean {

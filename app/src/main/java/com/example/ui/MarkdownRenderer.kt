@@ -39,9 +39,10 @@ sealed class MarkdownBlock {
 fun MarkdownText(
     content: String,
     modifier: Modifier = Modifier,
-    color: Color = MaterialTheme.colorScheme.onSurface
+    color: Color = MaterialTheme.colorScheme.onSurface,
+    isStreaming: Boolean = false
 ) {
-    val blocks = remember(content) { parseMarkdown(content) }
+    val blocks by rememberMarkdownBlocks(content = content, isStreaming = isStreaming)
     val clipboardManager = LocalClipboardManager.current
     
     Column(
@@ -114,6 +115,22 @@ fun MarkdownText(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun rememberMarkdownBlocks(
+    content: String,
+    isStreaming: Boolean
+): State<List<MarkdownBlock>> {
+    if (!isStreaming) {
+        return remember(content) { mutableStateOf(parseMarkdown(content)) }
+    }
+
+    val initialBlocks = remember { parseMarkdown(content) }
+    return produceState(initialValue = initialBlocks, content, isStreaming) {
+        withFrameNanos { }
+        value = parseMarkdown(content)
     }
 }
 
