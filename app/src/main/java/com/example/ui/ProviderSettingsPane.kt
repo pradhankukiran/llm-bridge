@@ -106,7 +106,13 @@ fun ProviderSettingsPane(
         }
     }
 
-    BackHandler(enabled = !showingList) { popForm() }
+    BackHandler(enabled = true) {
+        if (showingList) {
+            onDismiss()
+        } else {
+            popForm()
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
