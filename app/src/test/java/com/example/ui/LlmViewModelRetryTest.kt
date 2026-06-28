@@ -13,6 +13,8 @@ import com.example.data.ChatMessage
 import com.example.data.ChatSession
 import com.example.data.LlmConfiguration
 import com.example.data.LlmRepository
+import com.example.sync.RouteSyncGateway
+import com.example.sync.SyncUser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -93,7 +95,7 @@ class LlmViewModelRetryTest {
         )
 
         val adapter = RecordingAdapter()
-        val viewModel = LlmViewModel(repository, LlmClient(adapter, adapter))
+        val viewModel = LlmViewModel(repository, LlmClient(adapter, adapter), NoopRouteSyncGateway)
 
         viewModel.selectSession(sessionId)
         viewModel.activeSession.filterNotNull().first()
@@ -131,6 +133,20 @@ class LlmViewModelRetryTest {
     private object PlainTextCipher : ApiKeyCipher {
         override fun encrypt(value: String): String = value
         override fun decrypt(value: String): String = value
+    }
+
+    private object NoopRouteSyncGateway : RouteSyncGateway {
+        override val currentUser: SyncUser? = null
+
+        override suspend fun signInWithGoogleIdToken(idToken: String): SyncUser {
+            error("Not used")
+        }
+
+        override fun signOut() = Unit
+
+        override suspend fun backupRoutes(userId: String, routes: List<LlmConfiguration>) = Unit
+
+        override suspend fun restoreRoutes(userId: String): List<LlmConfiguration> = emptyList()
     }
 }
 

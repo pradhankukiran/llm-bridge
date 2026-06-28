@@ -12,11 +12,19 @@ data class SyncUser(
     val displayName: String?
 )
 
+interface RouteSyncGateway {
+    val currentUser: SyncUser?
+    suspend fun signInWithGoogleIdToken(idToken: String): SyncUser
+    fun signOut()
+    suspend fun backupRoutes(userId: String, routes: List<LlmConfiguration>)
+    suspend fun restoreRoutes(userId: String): List<LlmConfiguration>
+}
+
 class FirebaseRouteSyncService(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
-) {
-    val currentUser: SyncUser?
+) : RouteSyncGateway {
+    override val currentUser: SyncUser?
         get() = auth.currentUser?.let { user ->
             SyncUser(
                 uid = user.uid,
@@ -25,7 +33,7 @@ class FirebaseRouteSyncService(
             )
         }
 
-    suspend fun signInWithGoogleIdToken(idToken: String): SyncUser {
+    override suspend fun signInWithGoogleIdToken(idToken: String): SyncUser {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         val result = auth.signInWithCredential(credential).await()
         val user = checkNotNull(result.user) { "Google sign-in completed without a Firebase user." }
@@ -36,11 +44,11 @@ class FirebaseRouteSyncService(
         )
     }
 
-    fun signOut() {
+    override fun signOut() {
         auth.signOut()
     }
 
-    suspend fun backupRoutes(userId: String, routes: List<LlmConfiguration>) {
+    override suspend fun backupRoutes(userId: String, routes: List<LlmConfiguration>) {
         val routeCollection = firestore.collection("users").document(userId).collection("routes")
         val existing = routeCollection.get().await()
         val batch = firestore.batch()
@@ -57,7 +65,7 @@ class FirebaseRouteSyncService(
         batch.commit().await()
     }
 
-    suspend fun restoreRoutes(userId: String): List<LlmConfiguration> {
+    override suspend fun restoreRoutes(userId: String): List<LlmConfiguration> {
         val snapshot = firestore.collection("users").document(userId).collection("routes").get().await()
         return snapshot.documents
             .mapNotNull { document -> FirebaseRouteDocument.fromMap(document.data.orEmpty())?.toConfig() }

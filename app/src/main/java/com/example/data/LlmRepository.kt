@@ -24,6 +24,9 @@ class LlmRepository(
     suspend fun getActiveConfigurationOneShot(): LlmConfiguration? =
         llmDao.getActiveConfigurationOneShot()?.let { decryptConfig(it) }
 
+    suspend fun getAllConfigurationsOneShot(): List<LlmConfiguration> =
+        llmDao.getAllConfigurationsOneShot().map { decryptConfig(it) }
+
     suspend fun getConfigurationSnapshot(id: Int): LlmConfiguration? =
         llmDao.getAllConfigurationsOneShot().firstOrNull { it.id == id }?.let { decryptConfig(it) }
 
@@ -67,6 +70,35 @@ class LlmRepository(
 
     suspend fun setActiveConfiguration(id: Int) {
         llmDao.setActiveConfiguration(id)
+    }
+
+    suspend fun upsertSyncedConfigurations(configs: List<LlmConfiguration>): Int {
+        if (configs.isEmpty()) return 0
+
+        val existingConfigs = getAllConfigurationsOneShot()
+        val existingByRouteKey = existingConfigs.associateBy { it.routeKey() }
+        val shouldActivateFirst = existingConfigs.none { it.isActive }
+        var savedCount = 0
+
+        for ((index, remoteConfig) in configs.withIndex()) {
+            val existing = existingByRouteKey[remoteConfig.routeKey()]
+            val configToSave = if (existing != null) {
+                remoteConfig.copy(
+                    id = existing.id,
+                    isActive = existing.isActive,
+                    timestamp = existing.timestamp
+                )
+            } else {
+                remoteConfig.copy(
+                    id = 0,
+                    isActive = shouldActivateFirst && index == 0
+                )
+            }
+            llmDao.insertConfiguration(encryptConfig(configToSave))
+            savedCount += 1
+        }
+
+        return savedCount
     }
 
     fun getSessionsForConfig(configId: Int): Flow<List<ChatSession>> {
@@ -157,6 +189,10 @@ class LlmRepository(
 
     private fun decryptConfig(config: LlmConfiguration): LlmConfiguration {
         return config.copy(apiKey = apiKeyCipher.decrypt(config.apiKey))
+    }
+
+    private fun LlmConfiguration.routeKey(): String {
+        return "${apiType.trim().uppercase()}|${baseUrl.trim().trimEnd('/')}|${modelName.trim()}"
     }
 
 }

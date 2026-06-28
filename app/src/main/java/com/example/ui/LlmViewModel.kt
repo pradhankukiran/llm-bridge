@@ -16,6 +16,8 @@ import com.example.data.ChatMessage
 import com.example.data.LlmConfiguration
 import com.example.data.ChatSession
 import com.example.data.LlmRepository
+import com.example.sync.RouteSyncGateway
+import com.example.sync.SyncUser
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -35,7 +37,8 @@ import java.util.concurrent.TimeUnit
 @OptIn(ExperimentalCoroutinesApi::class)
 class LlmViewModel(
     private val repository: LlmRepository,
-    private val llmClient: LlmClient
+    private val llmClient: LlmClient,
+    private val routeSyncService: RouteSyncGateway
 ) : ViewModel() {
 
     // Loaded configurations
@@ -87,6 +90,11 @@ class LlmViewModel(
 
     private val _isSwitchingSession = MutableStateFlow(false)
     val isSwitchingSession: StateFlow<Boolean> = _isSwitchingSession.asStateFlow()
+
+    private val _routeSyncState = MutableStateFlow(
+        RouteSyncState(user = routeSyncService.currentUser)
+    )
+    val routeSyncState: StateFlow<RouteSyncState> = _routeSyncState.asStateFlow()
 
     init {
 
@@ -219,6 +227,80 @@ class LlmViewModel(
                 repository.setActiveConfiguration(newId.toInt())
             }
         }
+    }
+
+    fun signInWithGoogleIdToken(idToken: String) {
+        viewModelScope.launch {
+            setRouteSyncBusy("Signing in...")
+            runCatching {
+                routeSyncService.signInWithGoogleIdToken(idToken)
+            }.onSuccess { user ->
+                _routeSyncState.value = RouteSyncState(
+                    user = user,
+                    message = "Signed in as ${user.email ?: user.displayName ?: "Google account"}"
+                )
+            }.onFailure { error ->
+                setRouteSyncError(error.message ?: "Google sign-in failed")
+            }
+        }
+    }
+
+    fun signOutRouteSync() {
+        routeSyncService.signOut()
+        _routeSyncState.value = RouteSyncState(message = "Signed out")
+    }
+
+    fun backupRoutesToFirebase() {
+        val user = _routeSyncState.value.user ?: return setRouteSyncError("Sign in first")
+        viewModelScope.launch {
+            setRouteSyncBusy("Backing up routes...")
+            runCatching {
+                val routes = repository.getAllConfigurationsOneShot()
+                routeSyncService.backupRoutes(user.uid, routes)
+                routes.size
+            }.onSuccess { count ->
+                _routeSyncState.value = RouteSyncState(
+                    user = user,
+                    message = "Backed up $count route${if (count == 1) "" else "s"}"
+                )
+            }.onFailure { error ->
+                setRouteSyncError(error.message ?: "Route backup failed")
+            }
+        }
+    }
+
+    fun restoreRoutesFromFirebase() {
+        val user = _routeSyncState.value.user ?: return setRouteSyncError("Sign in first")
+        viewModelScope.launch {
+            setRouteSyncBusy("Restoring routes...")
+            runCatching {
+                val remoteRoutes = routeSyncService.restoreRoutes(user.uid)
+                repository.upsertSyncedConfigurations(remoteRoutes)
+            }.onSuccess { count ->
+                _routeSyncState.value = RouteSyncState(
+                    user = user,
+                    message = "Restored $count route${if (count == 1) "" else "s"}"
+                )
+            }.onFailure { error ->
+                setRouteSyncError(error.message ?: "Route restore failed")
+            }
+        }
+    }
+
+    private fun setRouteSyncBusy(message: String) {
+        _routeSyncState.value = _routeSyncState.value.copy(
+            isBusy = true,
+            message = message,
+            error = null
+        )
+    }
+
+    private fun setRouteSyncError(message: String) {
+        _routeSyncState.value = _routeSyncState.value.copy(
+            isBusy = false,
+            message = null,
+            error = message
+        )
     }
 
 
@@ -524,9 +606,17 @@ class LlmViewModel(
                 val application = checkNotNull(extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY]) as LlmBridgeApplication
                 return LlmViewModel(
                     application.container.repository,
-                    application.container.llmClient
+                    application.container.llmClient,
+                    application.container.routeSyncService
                 ) as T
             }
         }
     }
 }
+
+data class RouteSyncState(
+    val user: SyncUser? = null,
+    val isBusy: Boolean = false,
+    val message: String? = null,
+    val error: String? = null
+)

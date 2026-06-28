@@ -12,13 +12,14 @@ import com.example.data.ApiKeyCipher
 import com.example.data.KeystoreApiKeyCipher
 import com.example.data.LlmRepository
 import com.example.sync.FirebaseRouteSyncService
+import com.example.sync.RouteSyncGateway
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 
 interface AppContainer {
     val repository: LlmRepository
     val llmClient: LlmClient
-    val routeSyncService: FirebaseRouteSyncService
+    val routeSyncService: RouteSyncGateway
 }
 
 class AppContainerImpl(private val context: Context) : AppContainer {
@@ -57,7 +58,7 @@ class AppContainerImpl(private val context: Context) : AppContainer {
         LlmClient(openAiCompatibleAdapter, anthropicAdapter)
     }
 
-    override val routeSyncService: FirebaseRouteSyncService by lazy {
+    override val routeSyncService: RouteSyncGateway by lazy {
         FirebaseRouteSyncService()
     }
 }
