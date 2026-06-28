@@ -105,18 +105,14 @@ fun ProviderSettingsPane(
     onDismiss: () -> Unit
 ) {
     var editingConfig by remember { mutableStateOf<LlmConfiguration?>(null) }
-    var isAddingNew by remember(configurations) { mutableStateOf(configurations.isEmpty()) }
+    var isAddingNew by remember { mutableStateOf(false) }
     var configPendingDelete by remember { mutableStateOf<LlmConfiguration?>(null) }
 
     val configToEdit = editingConfig
     val showingList = configToEdit == null && !isAddingNew
     val popForm = {
-        if (configurations.isEmpty()) {
-            onDismiss()
-        } else {
-            editingConfig = null
-            isAddingNew = false
-        }
+        editingConfig = null
+        isAddingNew = false
     }
 
     BackHandler(enabled = true) {
@@ -251,6 +247,15 @@ private fun RouteListContent(
                 .weight(1f),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
+            if (configurations.isEmpty()) {
+                item {
+                    EmptyRoutesState(
+                        modifier = Modifier
+                            .fillParentMaxWidth()
+                            .padding(top = 32.dp)
+                    )
+                }
+            }
             items(configurations) { config ->
                 RouteCard(
                     config = config,
@@ -275,6 +280,33 @@ private fun RouteListContent(
                 fontWeight = FontWeight.Bold
             )
         }
+    }
+}
+
+@Composable
+private fun EmptyRoutesState(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Default.Route,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
+            modifier = Modifier.size(28.dp)
+        )
+        Text(
+            text = "No routes yet",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            text = "Restore saved routes or add one manually.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
