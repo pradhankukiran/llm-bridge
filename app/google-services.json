@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "755343283787",
+    "project_id": "llm-bridge-9c7e2",
+    "storage_bucket": "llm-bridge-9c7e2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:755343283787:android:a1e96d31769033ed05dfce",
+        "android_client_info": {
+          "package_name": "com.aistudio.llmbridge.pwytv"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "755343283787-au3e5u9lbrnp6mqt2g0ddisqost48p2v.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.aistudio.llmbridge.pwytv",
+            "certificate_hash": "e2fac170d4a39440d1461449ef645cc7ba3745ca"
+          }
+        },
+        {
+          "client_id": "755343283787-jodek3keo6ksdmg7dlua7gfjb7b1ledu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBpuF2SIiA-ArHgKfqjfq4UgetJfnYEDKA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "755343283787-jodek3keo6ksdmg7dlua7gfjb7b1ledu.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
