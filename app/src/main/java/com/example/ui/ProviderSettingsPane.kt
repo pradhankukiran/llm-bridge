@@ -29,7 +29,12 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Login
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CloudDownload
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -45,6 +50,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -91,6 +97,11 @@ fun ProviderSettingsPane(
     onSaveConfig: (LlmConfiguration) -> Unit,
     onSelectActiveConfig: (Int) -> Unit,
     onDeleteConfig: (Int) -> Unit,
+    routeSyncState: RouteSyncState,
+    onGoogleSignIn: () -> Unit,
+    onSignOut: () -> Unit,
+    onBackupRoutes: () -> Unit,
+    onRestoreRoutes: () -> Unit,
     onDismiss: () -> Unit
 ) {
     var editingConfig by remember { mutableStateOf<LlmConfiguration?>(null) }
@@ -153,6 +164,11 @@ fun ProviderSettingsPane(
                 onEditConfig = { editingConfig = it },
                 onDeleteConfigClick = { configPendingDelete = it },
                 onAddRoute = { isAddingNew = true },
+                routeSyncState = routeSyncState,
+                onGoogleSignIn = onGoogleSignIn,
+                onSignOut = onSignOut,
+                onBackupRoutes = onBackupRoutes,
+                onRestoreRoutes = onRestoreRoutes,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
@@ -210,12 +226,25 @@ private fun RouteListContent(
     onEditConfig: (LlmConfiguration) -> Unit,
     onDeleteConfigClick: (LlmConfiguration) -> Unit,
     onAddRoute: () -> Unit,
+    routeSyncState: RouteSyncState,
+    onGoogleSignIn: () -> Unit,
+    onSignOut: () -> Unit,
+    onBackupRoutes: () -> Unit,
+    onRestoreRoutes: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier.padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        RouteSyncPanel(
+            state = routeSyncState,
+            onGoogleSignIn = onGoogleSignIn,
+            onSignOut = onSignOut,
+            onBackupRoutes = onBackupRoutes,
+            onRestoreRoutes = onRestoreRoutes
+        )
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
@@ -245,6 +274,143 @@ private fun RouteListContent(
                 text = "Add new route",
                 fontWeight = FontWeight.Bold
             )
+        }
+    }
+}
+
+@Composable
+private fun RouteSyncPanel(
+    state: RouteSyncState,
+    onGoogleSignIn: () -> Unit,
+    onSignOut: () -> Unit,
+    onBackupRoutes: () -> Unit,
+    onRestoreRoutes: () -> Unit
+) {
+    val signedIn = state.user != null
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.AccountCircle,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp)
+                )
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Text(
+                        text = state.user?.email ?: "Route sync",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = if (signedIn) {
+                            "Back up routes and raw API keys to Firebase"
+                        } else {
+                            "Sign in with Google to restore routes"
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                if (signedIn) {
+                    IconButton(
+                        onClick = onSignOut,
+                        enabled = !state.isBusy
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Logout,
+                            contentDescription = "Sign out",
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                } else {
+                    OutlinedButton(
+                        onClick = onGoogleSignIn,
+                        enabled = !state.isBusy
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Login,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Sign in")
+                    }
+                }
+            }
+
+            if (signedIn) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onRestoreRoutes,
+                        enabled = !state.isBusy,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CloudDownload,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Restore")
+                    }
+                    Button(
+                        onClick = onBackupRoutes,
+                        enabled = !state.isBusy,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CloudUpload,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Back up")
+                    }
+                }
+            }
+
+            if (state.isBusy) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            }
+
+            state.message?.let { message ->
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            state.error?.let { error ->
+                Text(
+                    text = error,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
         }
     }
 }

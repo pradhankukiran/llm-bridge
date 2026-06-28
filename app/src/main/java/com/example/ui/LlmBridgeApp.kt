@@ -1,5 +1,9 @@
 package com.example.ui
 
+import androidx.credentials.ClearCredentialStateRequest
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
@@ -22,15 +26,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.ChatMessage
 import com.example.data.LlmConfiguration
 import com.example.data.ChatSession
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -45,6 +54,7 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
     val activeSession by viewModel.activeSession.collectAsStateWithLifecycle()
     val isWaitingForFirstChunk by viewModel.isWaitingForFirstChunk.collectAsStateWithLifecycle()
     val isSwitchingSession by viewModel.isSwitchingSession.collectAsStateWithLifecycle()
+    val routeSyncState by viewModel.routeSyncState.collectAsStateWithLifecycle()
 
     var showSettingsScreen by remember { mutableStateOf(false) }
     var showLogsSheet by remember { mutableStateOf(false) }
@@ -55,6 +65,43 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val webClientId = stringResource(id = R.string.default_web_client_id)
+    val credentialManager = remember(context) { CredentialManager.create(context) }
+    fun startGoogleSignIn() {
+        scope.launch {
+            runCatching {
+                val googleIdOption = GetGoogleIdOption.Builder()
+                    .setFilterByAuthorizedAccounts(false)
+                    .setServerClientId(webClientId)
+                    .build()
+                val request = GetCredentialRequest.Builder()
+                    .addCredentialOption(googleIdOption)
+                    .build()
+                val credential = credentialManager.getCredential(context, request).credential
+                if (
+                    credential !is CustomCredential ||
+                    credential.type != GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+                ) {
+                    error("Google sign-in returned an unsupported credential")
+                }
+                val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+                viewModel.signInWithGoogleIdToken(googleIdTokenCredential.idToken)
+            }.onFailure { error ->
+                snackbarHostState.showSnackbar(error.message ?: "Google sign-in failed")
+            }
+        }
+    }
+    fun signOutGoogle() {
+        scope.launch {
+            viewModel.signOutRouteSync()
+            runCatching {
+                credentialManager.clearCredentialState(ClearCredentialStateRequest())
+            }.onFailure { error ->
+                snackbarHostState.showSnackbar(error.message ?: "Credential sign-out failed")
+            }
+        }
+    }
     fun runWhenIdle(action: () -> Unit) {
         if (isGenerating) {
             scope.launch { snackbarHostState.showSnackbar("Stop generation first") }
@@ -93,6 +140,11 @@ fun LlmBridgeApp(viewModel: LlmViewModel) {
                         }
                     }
                 },
+                routeSyncState = routeSyncState,
+                onGoogleSignIn = { startGoogleSignIn() },
+                onSignOut = { signOutGoogle() },
+                onBackupRoutes = { viewModel.backupRoutesToFirebase() },
+                onRestoreRoutes = { viewModel.restoreRoutesFromFirebase() },
                 onDismiss = { showSettingsScreen = false }
             )
         }
