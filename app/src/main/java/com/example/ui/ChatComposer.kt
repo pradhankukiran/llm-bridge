@@ -264,7 +264,7 @@ private fun ComposerInputRow(
             minLines = 1,
             maxLines = 4,
             enabled = inputEnabled,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
             keyboardActions = KeyboardActions(onSend = { onSubmit() })
         )
 
