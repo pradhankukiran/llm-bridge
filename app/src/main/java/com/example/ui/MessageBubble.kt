@@ -39,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -83,6 +84,7 @@ fun MessageBubble(
     ) {
         Box(
             modifier = Modifier
+                .testTag("message_bubble")
                 .widthIn(max = if (isUser) 560.dp else 720.dp)
                 .clip(bubbleShape)
                 .combinedClickable(

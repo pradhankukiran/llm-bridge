@@ -46,7 +46,7 @@ fun MarkdownText(
     val clipboardManager = LocalClipboardManager.current
     
     Column(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         blocks.forEach { block ->
